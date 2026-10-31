@@ -82,6 +82,16 @@ npm test
 
 This runs 26 unit tests (Node 18+ built-in test runner) covering the classifiers, the CSV parser, expense analysis, the assistant's planning and difficulty logic, progression, and memory.
 
+## Deploy to Google Cloud Run
+
+The repo ships a `Dockerfile` (nginx serving the static files on `$PORT`). From the project folder, or from Cloud Shell after cloning:
+
+```bash
+gcloud run deploy chore-quest --source . --region asia-south1 --allow-unauthenticated
+```
+
+Cloud Run builds the image and prints a `https://chore-quest-....run.app` URL. HTTPS matters here: the real-folder quest needs a secure origin for the File System Access API.
+
 ## Architecture
 
 ```

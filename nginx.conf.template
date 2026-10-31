@@ -1,0 +1,18 @@
+# The official nginx image fills in ${PORT} from the environment at startup.
+server {
+  listen ${PORT};
+  server_name _;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  gzip on;
+  gzip_types text/css application/javascript;
+
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+
+  location /healthz {
+    return 200 'ok';
+  }
+}
