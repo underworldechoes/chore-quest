@@ -5,6 +5,15 @@ server {
   root /usr/share/nginx/html;
   index index.html;
 
+  # Security headers (frame-ancestors only works as a header, not in the page's meta CSP).
+  add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" always;
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header X-Frame-Options "DENY" always;
+  add_header Referrer-Policy "no-referrer" always;
+  add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+  add_header Cross-Origin-Opener-Policy "same-origin" always;
+  server_tokens off;
+
   gzip on;
   gzip_types text/css application/javascript;
 

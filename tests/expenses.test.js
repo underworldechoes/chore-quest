@@ -47,3 +47,8 @@ test('keywords match whole words, not fragments inside other words', () => {
   assert.equal(suggestExpenseCategory({ description: 'HDFC EMI 0042' }).category, 'bills');
   assert.equal(suggestExpenseCategory({ description: 'ELECTRICITY BESCOM' }).category, 'bills');
 });
+
+test('CSV export neutralises spreadsheet formula injection', () => {
+  const out = toCsv([['=HYPERLINK("http://evil","x")', '+cmd', '-2+3', '@SUM(A1)', 42, 'SWIGGY']]);
+  assert.equal(out, `"'=HYPERLINK(""http://evil"",""x"")",'+cmd,'-2+3,'@SUM(A1),42,SWIGGY`);
+});

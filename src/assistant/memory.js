@@ -1,12 +1,16 @@
 // Persistent learned preferences + play history. Storage is injected so it's testable in Node.
 import { newArsenal } from '../game/arsenal.js';
+import { DEFAULT_BLADE } from '../game/blades.js';
 
 const KEY = 'chore-quest:v1';
 
 export class Memory {
   constructor(storage = globalThis.localStorage) {
     this.storage = storage;
-    this.data = { prefs: {}, history: {}, xp: 0, arsenal: newArsenal() };
+    this.data = {
+      prefs: {}, history: {}, xp: 0, arsenal: newArsenal(), blade: DEFAULT_BLADE,
+      story: { claimed: [], bossesSlain: 0, finalBossesSlain: 0 },
+    };
     try {
       const raw = storage?.getItem(KEY);
       if (raw) this.data = { ...this.data, ...JSON.parse(raw) };
@@ -73,6 +77,24 @@ export class Memory {
 
   set arsenal(value) {
     this.data.arsenal = value;
+    this.save();
+  }
+
+  get story() {
+    return this.data.story;
+  }
+
+  set story(value) {
+    this.data.story = value;
+    this.save();
+  }
+
+  get blade() {
+    return this.data.blade;
+  }
+
+  set blade(id) {
+    this.data.blade = id;
     this.save();
   }
 

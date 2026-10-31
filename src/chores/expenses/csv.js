@@ -26,10 +26,20 @@ export function parseCsv(text) {
   return rows;
 }
 
+// Cells starting with these are run as formulas by Excel / Sheets (CSV "formula injection").
+const FORMULA_PREFIX = /^[=+\-@\t\r]/;
+
+/** Neutralise spreadsheet formulas in untrusted text cells. Numbers pass through untouched. */
+export function safeCell(v) {
+  if (typeof v === 'number') return String(v);
+  const s = String(v ?? '');
+  return FORMULA_PREFIX.test(s) ? `'${s}` : s;
+}
+
 export function toCsv(rows) {
   return rows
     .map((r) => r.map((v) => {
-      const s = String(v ?? '');
+      const s = safeCell(v);
       return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     }).join(','))
     .join('\n');

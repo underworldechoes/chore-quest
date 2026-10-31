@@ -2,6 +2,7 @@
 import { SPRITES, HERO_PALETTE, BYTE_PALETTE, drawSprite } from './sprites.js';
 import { panel, text, fit, FONT } from './draw.js';
 import { W, H } from './game.js';
+import { getBlade } from './blades.js';
 
 const WORLD_W = 960;
 const GROUND = 214;
@@ -25,9 +26,9 @@ const HOUSES = [
 export class Town {
   /**
    * @param {HTMLCanvasElement} canvas
-   * @param {{chores, recommendedId, progress, startX?, showTitle?, onEnter:(choreId:string, x:number)=>void, onArmory:(x:number)=>void}} opts
+   * @param {{chores, recommendedId, progress, startX?, showTitle?, onEnter:(choreId:string, x:number)=>void, onArmory:(x:number)=>void, onBoard:(x:number)=>void, blade?:string, quest?:string}} opts
    */
-  constructor(canvas, { chores, recommendedId, progress, startX = 90, showTitle = true, onEnter, onArmory }) {
+  constructor(canvas, { chores, recommendedId, progress, startX = 90, showTitle = true, onEnter, onArmory, onBoard, blade, quest }) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.gates = chores.map((chore, i) => ({ chore, x: GATE_X[i] ?? 300 + i * 200, ...GATE_STYLE[chore.id] }));
@@ -35,6 +36,9 @@ export class Town {
     this.progress = progress;
     this.onEnter = onEnter;
     this.onArmory = onArmory;
+    this.onBoard = onBoard;
+    this.blade = getBlade(blade);
+    this.quest = quest;
 
     this.x = startX;
     this.facing = 1;
@@ -111,6 +115,7 @@ export class Town {
     const gate = this.nearGate;
     if (gate) this.enter(gate);
     else if (this.nearArmory) this.enter({ armory: true });
+    else if (Math.abs(this.x - BOARD_X) < NEAR) { this.stop(); this.onBoard(this.x); }
   }
 
   enter(dest) {
@@ -189,6 +194,8 @@ export class Town {
     const sprite = this.moving && Math.floor(this.time * 8) % 2 ? SPRITES.heroWalk : SPRITES.hero;
     const bob = this.moving ? 0 : Math.round(Math.sin(this.time * 2));
     drawSprite(ctx, sprite, HERO_PALETTE, this.x - 12, GROUND - sprite.length * SCALE + bob, SCALE, this.facing < 0);
+    const bladeX = this.facing < 0 ? this.x - 12 - 14 : this.x + 6;
+    drawSprite(ctx, this.blade.shape, this.blade.palette, bladeX, GROUND - 9 * SCALE + bob, 1, this.facing < 0);
     glow(ctx, this.x + this.facing * -1, GROUND - 26, 22, '#ffd36b', 0.12);
     drawSprite(ctx, SPRITES.byte, BYTE_PALETTE, this.byte.x, this.byte.y + Math.sin(this.time * 3) * 3, SCALE);
     ctx.restore();
@@ -320,6 +327,10 @@ export class Town {
     ctx.fillStyle = '#5ce1e6';
     ctx.fillRect(10, 22, (164 * p.into) / p.needed, 6);
 
+    if (this.quest) {
+      panel(ctx, 4, 38, 236, 14, '#06102acc');
+      text(ctx, fit(`QUEST: ${this.quest}`, 28), 9, 41, '#ffd36b');
+    }
     text(ctx, 'LANTERNFALL', W - 98, 8, '#8fa3d9');
     text(ctx, 'SAFE ZONE', W - 82, 20, '#5fd38d');
     const coins = `${p.coins} G`;
@@ -333,7 +344,7 @@ export class Town {
     } else if (this.nearArmory) {
       systemWindow(ctx, '[W/E] ENTER ARMORY', 'Buy and upgrade guns with coins from real chores');
     } else if (Math.abs(this.x - BOARD_X) < NEAR) {
-      systemWindow(ctx, 'GUILD BOARD', `Total cleared: ${p.totalCleared}   XP to next: ${p.needed - p.into}`);
+      systemWindow(ctx, '[W/E] READ THE QUEST LOG', `Total cleared: ${p.totalCleared}   XP to next: ${p.needed - p.into}`);
     } else if (this.time < 6) {
       systemWindow(ctx, 'CONTROLS', 'A/D walk   W/E enter a gate   or click one');
     }

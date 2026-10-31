@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+  <meta name="referrer" content="no-referrer" />
   <title>Chore Quest</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
@@ -50,7 +52,22 @@
         </div>
         <div class="byte-line"><span class="byte-icon" aria-hidden="true"></span><p id="armory-advice"></p></div>
         <div id="weapons" class="weapons"></div>
+        <p class="sys-head">[ BLADES ] <span>slide to choose, unlock more by levelling up</span></p>
+        <div class="carousel">
+          <button id="blade-prev" class="btn ghost" aria-label="Previous blades">&lt;</button>
+          <div id="blade-track" class="blade-track" tabindex="0" aria-label="Sword designs"></div>
+          <button id="blade-next" class="btn ghost" aria-label="Next blades">&gt;</button>
+        </div>
         <div class="row center"><button id="armory-back" class="btn ghost">Back to town (Esc)</button></div>
+      </div>
+    </section>
+
+    <section id="questlog" class="screen">
+      <div class="sys-window wide">
+        <p class="sys-head">[ STORY QUEST ] <span>The Clutter King</span></p>
+        <p class="muted">Chapters complete from real chores you finish, not from button presses.</p>
+        <ol id="quest-list" class="quest-list"></ol>
+        <div class="row center"><button id="quest-back" class="btn ghost">Back to town (Esc)</button></div>
       </div>
     </section>
 

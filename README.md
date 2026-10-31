@@ -41,6 +41,18 @@ Battles take place in a perspective corridor: 2D pixel sprites in a 3D-looking s
 - **The heaviest item in each wave comes last as the FINAL BOSS** (+1 HP, gold aura).
 - An enemy that reaches you is always left untouched. **Dodge** it and your combo survives; get hit and you lose the combo and 2 coins.
 
+## Story quest: The Clutter King
+
+Read the **Guild Board** in town (`W`/`E`) to open the quest log. Five chapters (The Hoard Stirs, Debts of the Mire, The Weight of Things, Steel of the Forge, The Clutter King) complete **only from real progress**: items cleared, bosses slain, guns owned, level reached. Each one pays coins and unlocks the next part of Byte's story. The current goal is always shown in the town HUD.
+
+## Blades
+
+Six original pixel-art swords (Lantern Edge, Tidecutter, Emberfang, Jade Requiem, Voidrend, Dawnbreaker) unlock as you level up. Choose one from the **sliding carousel** in the Armory (buttons, swipe/scroll, or the arrow keys). The equipped blade is drawn in your hand in town and in battle.
+
+## Security
+
+See [SECURITY.md](SECURITY.md). In short: everything stays on the device; files are moved, never deleted, and every move can be undone; there is no `innerHTML`; CSV exports are protected against formula injection; a strict CSP and security headers apply on every host; and there are zero dependencies.
+
 ## Quests
 
 | Quest | Real input | What actually happens |
@@ -90,7 +102,7 @@ Then open http://localhost:5173 in **Chrome or Edge**. Real folder sorting needs
 npm test
 ```
 
-This runs 33 unit tests (Node 18+ built-in test runner) covering the classifiers, the CSV parser, expense analysis, the assistant's planning and difficulty logic, progression, and memory.
+This runs 38 unit tests (Node 18+ built-in test runner) covering the classifiers, the CSV parser, expense analysis, the assistant's planning and difficulty logic, progression, and memory.
 
 ## Deploy to Google Cloud Run
 
@@ -121,6 +133,9 @@ src/
     arsenal.js            guns, upgrades, coin bounty, which extra items a shot hits (pure)
     voyage.js             warp-jump cutscene between town and battle
     encounters.js         random enemy motion, boss HP plan, final boss, boss colours (pure)
+    story.js              story quest chapters, checked against real progress (pure)
+    blades.js             sword designs and level unlocks
+  ui/dom.js               safe DOM builder (textContent only, no innerHTML)
     draw.js               shared canvas UI helpers
     sprites.js            procedural pixel art (no asset files)
     audio.js              WebAudio blips

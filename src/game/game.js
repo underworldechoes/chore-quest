@@ -5,6 +5,7 @@ import { SPRITES, HERO_PALETTE, BYTE_PALETTE, enemyPalette, drawSprite } from '.
 import { enemySpeed, spawnInterval, canAutoSweep, commentary, repeatRatio } from '../assistant/assistant.js';
 import { WEAPONS, getWeapon, weaponStats, extraTargets, coinsFor } from './arsenal.js';
 import { newMotion, stepMotion, planWave, bossColor } from './encounters.js';
+import { getBlade } from './blades.js';
 import { sfx } from './audio.js';
 import { panel, text, fit, FONT } from './draw.js';
 
@@ -56,9 +57,9 @@ const xOfDepth = (z) => SKIP_X + ((z - 1) / (MAX_Z - 1)) * (SPAWN_X - SKIP_X);
 export class Game {
   /**
    * @param {HTMLCanvasElement} canvas
-   * @param {{session, chore, items, memory, arsenal, onEquip:(id)=>void, onEnd:(results, stats)=>void}} opts
+   * @param {{session, chore, items, memory, arsenal, blade, onEquip:(id)=>void, onEnd:(results, stats)=>void}} opts
    */
-  constructor(canvas, { session, chore, items, memory, arsenal, onEquip, onEnd }) {
+  constructor(canvas, { session, chore, items, memory, arsenal, blade, onEquip, onEnd }) {
     this.ctx = canvas.getContext('2d');
     this.canvas = canvas;
     this.session = session;
@@ -73,6 +74,7 @@ export class Game {
     this.finalItem = wave.finalItem;
     this.total = items.length;
     this.theme = THEMES[chore.id] ?? THEMES.files;
+    this.blade = getBlade(blade);
 
     this.owned = arsenal.owned;
     this.weapon = arsenal.equipped;
@@ -87,7 +89,7 @@ export class Game {
     this.results = [];
     this.pending = new Set();
     this.stats = {
-      agree: 0, override: 0, skipped: 0, bestCombo: 0, coins: 0, hits: 0, dodges: 0, bosses: 0,
+      agree: 0, override: 0, skipped: 0, bestCombo: 0, coins: 0, hits: 0, dodges: 0, bosses: 0, finalBosses: 0,
       startedAt: performance.now(),
     };
     this.combo = 0;
@@ -235,6 +237,7 @@ export class Game {
     }
     if (enemy.maxHp > 1) {
       this.stats.bosses++;
+      if (enemy.final) this.stats.finalBosses++;
       this.say(enemy.final ? 'FINAL BOSS DOWN! The wave is clear.' : 'Boss down!', 2);
     }
 
@@ -522,6 +525,8 @@ export class Game {
     shadow(ctx, pos.x, pos.y, 6 * px);
     if (this.hero.hurt > 0 && Math.floor(this.time * 20) % 2) ctx.globalAlpha = 0.4;
     drawSprite(ctx, sprite, HERO_PALETTE, x, pos.y - sprite.length * px, px);
+    const lunge = this.castTimer > 0 ? 2 * px : 0;
+    drawSprite(ctx, this.blade.shape, this.blade.palette, x + 9 * px + lunge, pos.y - 7 * px, Math.max(1, px - 1));
     ctx.globalAlpha = 1;
     drawSprite(ctx, SPRITES.byte, BYTE_PALETTE, x + 15 * px, pos.y - 25 * px + Math.sin(this.time * 3) * 3, 2);
   }
