@@ -38,6 +38,8 @@ export const sfx = {
   zap: () => blip(660, 0.07),
   agree: () => blip(880, 0.09, 'triangle'),
   skip: () => blip(140, 0.18, 'sawtooth'),
+  thunder: () => { sweep(70, 28, 1.6, 'sawtooth', 0.05); setTimeout(() => sweep(55, 22, 2.2, 'triangle', 0.07), 120); },
+  clang: () => blip(1400, 0.05, 'square', 0.015),
   engine: () => sweep(60, 120, 1.4, 'sawtooth', 0.02),
   warp: () => sweep(120, 2400, 0.6),
   brake: () => sweep(1800, 90, 0.8),

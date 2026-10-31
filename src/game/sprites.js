@@ -128,6 +128,38 @@ export const SPRITES = {
     'gggggggggg',
     '.d.d..d.d.',
   ],
+  smithUp: [ // hammer raised
+    '.........mm.',
+    '.........mm.',
+    '..hhhh...w..',
+    '.hsssh..w...',
+    '.hsksk.w....',
+    '..sssssw....',
+    '..hhhhss....',
+    '.ttaattts...',
+    'tttaaatt....',
+    't.taaat.....',
+    's.taaat.....',
+    '..pp.pp.....',
+    '..pp.pp.....',
+    '..bb.bb.....',
+  ],
+  smithDown: [ // hammer striking the anvil
+    '............',
+    '............',
+    '..hhhh......',
+    '.hsssh......',
+    '.hsksk......',
+    '..sssss.....',
+    '..hhhh......',
+    '.ttaatttsswww',
+    'tttaaatt...mm',
+    't.taaat....mm',
+    's.taaat......',
+    '..pp.pp......',
+    '..pp.pp......',
+    '..bb.bb......',
+  ],
   hermit: [
     '....hhh....',
     '...hhhhh..a',
@@ -176,6 +208,7 @@ export const SPRITES = {
 
 export const HERO_PALETTE = { l: '#ffd36b', n: '#c9d4ff', m: '#e8e6f0', e: '#0a0a14', c: '#2a3354', d: '#161b30' };
 export const HERMIT_PALETTE = { h: '#4a4a5e', s: '#e0b896', k: '#1b1b1b', w: '#f0f0f0', r: '#5a4632', b: '#2a1f18', l: '#8b6b3e', a: '#ffd36b' };
+export const SMITH_PALETTE = { s: '#d9a57a', h: '#3b2a20', k: '#1b1b1b', a: '#6b4a2e', t: '#8a3b2b', p: '#2e2a3a', b: '#1b1612', m: '#aab3c5', w: '#7a5530' };
 export const SHIP_PALETTE = { w: '#c9d4ff', h: '#5b6aa8', b: '#2a3354', c: '#5ce1e6', g: '#ffd36b', t: '#3a4270' };
 export const BYTE_PALETTE ={ c: '#26c6da', w: '#e0f7fa', k: '#006064' };
 

@@ -1,5 +1,6 @@
 // Lanternfall: the walkable hub town. Each quest gate leads to a chore.
-import { SPRITES, HERO_PALETTE, BYTE_PALETTE, HERMIT_PALETTE, drawSprite } from './sprites.js';
+import { SPRITES, HERO_PALETTE, BYTE_PALETTE, HERMIT_PALETTE, SMITH_PALETTE, drawSprite } from './sprites.js';
+import { sfx } from './audio.js';
 import { panel, text, fit, FONT } from './draw.js';
 import { W, H } from './game.js';
 import { getBlade } from './blades.js';
@@ -13,6 +14,8 @@ const BOARD_X = 510;
 const ARMORY_X = 870;
 const LAMPS = [70, 215, 430, 610, 790, 960, 1210];
 const HERMIT_X = 1030;
+const HAMMER_PERIOD = 0.9;
+const CLANG_RANGE = 130;
 const HERMIT_LINES = [
   'HERMIT: Ten thousand unread letters sleep on that mountain, child.',
   'HERMIT: Sort the senders, not the letters. One rule tames a thousand.',
@@ -59,6 +62,10 @@ export class Town {
     this.time = 0;
     this.titleTimer = showTitle ? 3.5 : 0;
     this.rain = Array.from({ length: 70 }, () => ({ x: Math.random() * W, y: Math.random() * H, s: 140 + Math.random() * 80 }));
+    this.sparks = [];
+    this.forgeFlash = 0;
+    this.lastSwing = 0;
+    this.storm = { next: 2 + Math.random() * 3, life: 0, x: 0, seed: 1, thunderIn: -1 };
     this.motes = Array.from({ length: 24 }, (_, i) => ({ x: (i * 41) % WORLD_W, y: GROUND - Math.random() * 120, p: Math.random() * 6 }));
 
     this.onKeyDown = this.onKeyDown.bind(this);
@@ -188,6 +195,8 @@ export class Town {
       if (m.y < GROUND - 140) m.y = GROUND;
     }
     this.titleTimer = Math.max(0, this.titleTimer - dt);
+    this.updateForge(dt);
+    this.updateStorm(dt);
   }
 
   // ---------- rendering ----------
@@ -226,6 +235,10 @@ export class Town {
     ctx.restore();
 
     this.drawRain(ctx);
+    if (this.storm.life > 0) {
+      ctx.fillStyle = `rgba(220, 210, 255, ${0.12 * (this.storm.life / 0.3)})`;
+      ctx.fillRect(0, 0, W, H);
+    }
     this.drawHud(ctx);
   }
 
@@ -236,6 +249,7 @@ export class Town {
     sky.addColorStop(1, '#25305e');
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
+    this.drawLightning(ctx);
 
     // Moon + distant spires on the slowest parallax layer.
     const mx = 360 - cam * 0.05;
@@ -377,30 +391,172 @@ export class Town {
     ctx.restore();
   }
 
+  /** The blacksmith's hammer cycle: each strike throws sparks and flashes the forge. */
+  updateForge(dt) {
+    const swing = Math.floor(this.time / HAMMER_PERIOD);
+    const phase = (this.time % HAMMER_PERIOD) / HAMMER_PERIOD;
+    if (swing !== this.lastSwing && phase >= 0.45) {
+      this.lastSwing = swing;
+      this.forgeFlash = 1;
+      for (let i = 0; i < 12; i++) {
+        const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4;
+        const s = 40 + Math.random() * 70;
+        this.sparks.push({ x: ARMORY_X + 26, y: GROUND - 15, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.4 + Math.random() * 0.3 });
+      }
+      if (Math.abs(this.x - ARMORY_X) < CLANG_RANGE) sfx.clang();
+    }
+    for (const p of this.sparks) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 220 * dt; p.life -= dt; }
+    this.sparks = this.sparks.filter((p) => p.life > 0 && p.y < GROUND);
+    this.forgeFlash = Math.max(0, this.forgeFlash - dt * 4);
+  }
+
+  /** Random lightning over the whole town, followed by thunder a moment later. */
+  updateStorm(dt) {
+    const st = this.storm;
+    st.next -= dt;
+    st.life = Math.max(0, st.life - dt);
+    if (st.next <= 0) {
+      st.life = 0.3;
+      st.x = 40 + Math.random() * (W - 80);
+      st.seed = Math.floor(Math.random() * 1000);
+      st.next = 4 + Math.random() * 6;
+      st.thunderIn = 0.3 + Math.random() * 0.8;
+    }
+    if (st.thunderIn > 0) {
+      st.thunderIn -= dt;
+      if (st.thunderIn <= 0) sfx.thunder();
+    }
+  }
+
+  drawLightning(ctx) {
+    const st = this.storm;
+    if (st.life <= 0) return;
+    const a = st.life / 0.3;
+    ctx.fillStyle = `rgba(210, 200, 255, ${0.35 * a})`;
+    ctx.fillRect(0, 0, W, GROUND);
+    let x = st.x;
+    let seed = st.seed;
+    const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    const branches = [];
+    ctx.strokeStyle = `rgba(245, 240, 255, ${a})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    for (let y = 0; y < GROUND - 70; y += 10) {
+      x += (rand() - 0.5) * 22;
+      ctx.lineTo(x, y);
+      if (rand() < 0.12) branches.push([x, y]);
+    }
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    for (const [bx, by] of branches) {
+      let cx = bx;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      for (let i = 1; i < 5; i++) { cx += (rand() - 0.3) * 14; ctx.lineTo(cx, by + i * 9); }
+      ctx.stroke();
+    }
+  }
+
+  /** The Armory: a timber-framed smithy with a forge, weapon rack and a blacksmith at the anvil. */
   drawArmory(ctx) {
     const x = ARMORY_X;
-    const flicker = 0.35 + Math.sin(this.time * 11) * 0.08;
-    ctx.fillStyle = '#241c22';
-    ctx.fillRect(x - 34, GROUND - 52, 68, 52);
-    for (let i = 0; i < 6; i++) ctx.fillRect(x - 38 + i * 4, GROUND - 56 - i * 4, 76 - i * 8, 4);
-    ctx.fillRect(x + 16, GROUND - 84, 10, 30);
-    ctx.fillStyle = '#05060f';
-    ctx.fillRect(x - 14, GROUND - 34, 28, 34);
-    glow(ctx, x, GROUND - 16, 40, '#ff7a2f', flicker);
-    ctx.fillStyle = '#ff9f43';
-    ctx.fillRect(x - 8, GROUND - 10, 16, 6);
-    ctx.fillStyle = '#6b7395';
-    ctx.fillRect(x - 30, GROUND - 12, 12, 4);
-    ctx.fillRect(x - 27, GROUND - 8, 6, 8);
-    for (let i = 0; i < 3; i++) {
-      const sy = GROUND - 90 - ((this.time * 14 + i * 10) % 30);
-      ctx.fillStyle = `rgba(150, 150, 170, ${0.3 - i * 0.08})`;
-      ctx.fillRect(x + 18 + Math.sin(this.time + i) * 3, sy, 6, 4);
+    const flicker = 0.35 + Math.sin(this.time * 11) * 0.08 + this.forgeFlash * 0.35;
+    const left = x - 52;
+    const top = GROUND - 62;
+
+    // Stone base and timber-framed walls.
+    ctx.fillStyle = '#3a3440';
+    ctx.fillRect(left, GROUND - 14, 104, 14);
+    ctx.fillStyle = '#4a4352';
+    for (let i = 0; i < 13; i++) ctx.fillRect(left + 2 + i * 8 + (i % 2) * 2, GROUND - 12 + (i % 2) * 6, 6, 4);
+    ctx.fillStyle = '#2a2026';
+    ctx.fillRect(left, top, 104, 48);
+    ctx.fillStyle = '#5a3d2b';
+    for (const bx of [left, left + 34, left + 70, left + 100]) ctx.fillRect(bx, top, 4, 48);
+    ctx.fillRect(left, top, 104, 3);
+    ctx.fillRect(left, top + 22, 104, 3);
+
+    // Shingled roof with overhang, and a chimney with smoke and embers.
+    for (let i = 0; i < 9; i++) {
+      ctx.fillStyle = i % 2 ? '#4b2f3a' : '#5a3846';
+      ctx.fillRect(left - 8 + i * 6, top - 4 - i * 4, 120 - i * 12, 4);
     }
+    ctx.fillStyle = '#3a3440';
+    ctx.fillRect(x + 24, top - 40, 12, 34);
+    ctx.fillStyle = '#4a4352';
+    ctx.fillRect(x + 22, top - 42, 16, 4);
+    for (let i = 0; i < 5; i++) {
+      const sy = top - 46 - ((this.time * 16 + i * 9) % 44);
+      ctx.fillStyle = `rgba(140, 135, 160, ${0.35 - i * 0.06})`;
+      ctx.fillRect(x + 27 + Math.sin(this.time * 1.3 + i) * 5 + i, sy, 7 + i, 5);
+    }
+    if (Math.floor(this.time * 3) % 2) { ctx.fillStyle = '#ffb347'; ctx.fillRect(x + 30 + Math.sin(this.time * 5) * 3, top - 50 - ((this.time * 30) % 20), 1, 1); }
+
+    // Open workshop: the forge glowing inside.
+    ctx.fillStyle = '#0b080c';
+    ctx.fillRect(left + 6, top + 26, 26, 22);
+    ctx.fillStyle = '#5b2c22';
+    ctx.fillRect(left + 8, GROUND - 16, 22, 10);
+    ctx.fillStyle = Math.floor(this.time * 8) % 2 ? '#ff9f43' : '#ffd36b';
+    ctx.fillRect(left + 11, GROUND - 19, 16, 4);
+    glow(ctx, left + 19, GROUND - 18, 46, '#ff7a2f', flicker);
+
+    // Door and a window glowing with forge light.
+    ctx.fillStyle = '#1a1214';
+    ctx.fillRect(x - 6, top + 22, 18, 26);
+    ctx.fillStyle = `rgba(255, 159, 67, ${0.5 + this.forgeFlash * 0.4})`;
+    ctx.fillRect(x + 20, top + 8, 10, 9);
+
+    // Weapon rack on the right wall: blades of the Armory.
+    ctx.fillStyle = '#5a3d2b';
+    ctx.fillRect(x + 36, top + 28, 14, 2);
+    for (let i = 0; i < 3; i++) {
+      ctx.fillStyle = ['#c9d4ff', '#5ce1e6', '#ff9f43'][i];
+      ctx.fillRect(x + 38 + i * 4, top + 14, 2, 16);
+      ctx.fillStyle = '#ffd36b';
+      ctx.fillRect(x + 37 + i * 4, top + 28, 4, 1);
+    }
+
+    // Hanging sign with a sword on it.
+    ctx.fillStyle = '#5a3d2b';
+    ctx.fillRect(left - 10, top + 2, 14, 2);
+    const sway = Math.sin(this.time * 1.5) * 1;
+    ctx.fillStyle = '#3b2a20';
+    ctx.fillRect(left - 14 + sway, top + 6, 16, 12);
+    ctx.fillStyle = '#c9d4ff';
+    ctx.fillRect(left - 12 + sway, top + 11, 12, 2);
+    ctx.fillStyle = '#ffd36b';
+    ctx.fillRect(left - 4 + sway, top + 9, 2, 6);
+
+    // Water barrel.
+    ctx.fillStyle = '#4a3220';
+    ctx.fillRect(x + 54, GROUND - 14, 10, 14);
+    ctx.fillStyle = '#6b7395';
+    ctx.fillRect(x + 54, GROUND - 11, 10, 1);
+    ctx.fillRect(x + 54, GROUND - 4, 10, 1);
+
+    // Anvil with a glowing blade on it, and the blacksmith hammering.
+    const anvilX = x + 18;
+    ctx.fillStyle = '#4b5263';
+    ctx.fillRect(anvilX, GROUND - 14, 18, 4);
+    ctx.fillRect(anvilX + 5, GROUND - 10, 8, 6);
+    ctx.fillRect(anvilX + 2, GROUND - 4, 14, 4);
+    ctx.fillStyle = this.forgeFlash > 0.3 ? '#ffffff' : '#ff9f43';
+    ctx.fillRect(anvilX + 3, GROUND - 16, 12, 2);
+    glow(ctx, anvilX + 9, GROUND - 16, 16, '#ffb347', 0.25 + this.forgeFlash * 0.5);
+
+    const phase = (this.time % HAMMER_PERIOD) / HAMMER_PERIOD;
+    const sprite = phase >= 0.45 && phase < 0.65 ? SPRITES.smithDown : SPRITES.smithUp;
+    drawSprite(ctx, sprite, SMITH_PALETTE, x - 6, GROUND - sprite.length * SCALE, SCALE);
+
+    ctx.fillStyle = '#ffd36b';
+    for (const p of this.sparks) ctx.fillRect(p.x, p.y, p.life > 0.3 ? 2 : 1, 1);
+
     const label = 'Armory';
     const lw = label.length * 8 + 10;
-    panel(ctx, x - lw / 2, GROUND - 106, lw, 14, '#0a1024dd');
-    text(ctx, label, x - lw / 2 + 5, GROUND - 103, '#ff9f43');
+    panel(ctx, x - lw / 2, top - 58, lw, 14, '#0a1024dd');
+    text(ctx, label, x - lw / 2 + 5, top - 55, '#ff9f43');
   }
 
   drawMotes(ctx) {
