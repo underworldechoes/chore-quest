@@ -23,7 +23,7 @@ const GATE_X = [330, 700, 1120];
 export const GATE_STYLE = {
   files: { color: '#9b7bff', name: 'The Hoard Well' },
   expenses: { color: '#5fd38d', name: 'Mire Gate' },
-  inbox: { color: '#9fd8ff', name: 'Summit Trail' },
+  inbox: { color: '#b39ddb', name: 'The Peak' },
 };
 // Mid-layer houses: [x, width, height, colour].
 const HOUSES = [
@@ -289,24 +289,78 @@ export class Town {
     [[-20, -46], [-6, -44], [8, -47], [-14, -33], [4, -32]].forEach(([dx, dy]) => ctx.fillRect(x + dx, GROUND + dy, 10, 9));
   }
 
-  /** A snowy peak rising behind the Summit Trail gate. */
+  /** The Peak: a storm-wrapped crag crowned by a gothic spire, a winding stair, dead trees and mist. */
   drawMountain(ctx) {
-    const base = GROUND;
     const peakX = 1150;
-    for (let i = 0; i < 70; i++) {
-      const y = base - 160 + i * 2.3;
-      const half = i * 3.2;
-      ctx.fillStyle = i < 14 ? '#e8f1ff' : i < 18 ? '#b8cbe6' : '#1b2644';
+    const strike = this.time % 6 < 0.18;
+    // Scale the whole scene around its base so the spire's tip stays on screen.
+    ctx.save();
+    ctx.translate(peakX, GROUND);
+    ctx.scale(0.78, 0.78);
+    ctx.translate(-peakX, -GROUND);
+
+    // Storm glow behind the spire, brighter on a lightning strike.
+    glow(ctx, peakX, GROUND - 170, 120, strike ? '#e6d9ff' : '#6b5b95', strike ? 0.5 : 0.25);
+
+    // Jagged crag.
+    for (let i = 0; i < 64; i++) {
+      const y = GROUND - 140 + i * 2.2;
+      const half = 18 + i * 2.6 + (i % 5) * 3;
+      ctx.fillStyle = i % 7 === 0 ? '#2a2438' : '#1a1626';
       ctx.fillRect(peakX - half, y, half * 2, 3);
     }
-    ctx.fillStyle = '#25325a';
-    for (let i = 0; i < 40; i++) ctx.fillRect(peakX + 40 + i * 2, base - 100 + i * 2.5, 2, 100 - i * 2.5);
-    for (let i = 0; i < 12; i++) {
-      const fx = 990 + ((i * 37) % 260);
-      const fy = GROUND - 150 + ((this.time * 20 + i * 23) % 150);
-      ctx.fillStyle = 'rgba(232, 241, 255, 0.7)';
-      ctx.fillRect(fx + Math.sin(this.time + i) * 4, fy, 2, 2);
+
+    // Gothic spire: tower, side turrets, needle tops and lit windows.
+    ctx.fillStyle = '#100d18';
+    ctx.fillRect(peakX - 14, GROUND - 210, 28, 74);
+    ctx.fillRect(peakX - 26, GROUND - 186, 8, 50);
+    ctx.fillRect(peakX + 18, GROUND - 180, 8, 44);
+    for (const [x, top, h] of [[peakX - 2, GROUND - 246, 36], [peakX - 23, GROUND - 204, 18], [peakX + 21, GROUND - 196, 16]]) {
+      for (let i = 0; i < h; i++) ctx.fillRect(x - Math.floor(i / 6), top + i, 4 + Math.floor(i / 6) * 2, 1);
     }
+    const windowGlow = 0.6 + Math.sin(this.time * 3) * 0.2;
+    ctx.fillStyle = `rgba(159, 216, 120, ${windowGlow})`;
+    for (const [x, y] of [[peakX - 6, GROUND - 196], [peakX + 2, GROUND - 180], [peakX - 6, GROUND - 162], [peakX - 24, GROUND - 170]]) ctx.fillRect(x, y, 3, 5);
+
+    // Winding stone stair from the gate up to the spire.
+    for (let i = 0; i < 26; i++) {
+      const t = i / 25;
+      const sx = 1120 + Math.sin(t * Math.PI * 2.2) * 40 * (1 - t) + t * 30;
+      const sy = GROUND - 8 - t * 128;
+      ctx.fillStyle = i % 2 ? '#4a4558' : '#3a3648';
+      ctx.fillRect(sx - 7 + t * 4, sy, 14 - t * 8, 3);
+      ctx.fillStyle = '#2f4a2a';
+      ctx.fillRect(sx - 8 + t * 4, sy + 2, 2, 1);
+    }
+
+    // Dead trees clinging to the rock.
+    ctx.strokeStyle = '#0c0a12';
+    ctx.lineWidth = 1;
+    for (const [x, y, s] of [[1040, GROUND - 40, 1], [1215, GROUND - 70, -1], [1075, GROUND - 95, -1], [1230, GROUND - 25, 1]]) {
+      tree(ctx, x, y, s);
+    }
+
+    // Mist wisps drifting around the crag.
+    for (let i = 0; i < 7; i++) {
+      const mx = 1040 + ((i * 53 + this.time * 8) % 220);
+      const my = GROUND - 30 - ((i * 37) % 130) + Math.sin(this.time + i) * 4;
+      ctx.fillStyle = 'rgba(200, 190, 230, 0.12)';
+      ctx.fillRect(mx, my, 26, 3);
+      ctx.fillRect(mx + 6, my - 3, 14, 2);
+    }
+
+    // Lightning.
+    if (strike) {
+      ctx.strokeStyle = '#f3ecff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      let lx = peakX + 30;
+      ctx.moveTo(lx, 0);
+      for (let y = 0; y < GROUND - 240; y += 14) { lx += ((y * 7) % 23) - 11; ctx.lineTo(lx, y); }
+      ctx.lineTo(peakX, GROUND - 246);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   drawArmory(ctx) {
@@ -450,4 +504,16 @@ function circle(ctx, x, y, r) {
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
+}
+
+function tree(ctx, x, y, side) {
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + side * 4, y - 14);
+  ctx.lineTo(x + side * 10, y - 20);
+  ctx.moveTo(x + side * 4, y - 14);
+  ctx.lineTo(x - side * 3, y - 22);
+  ctx.moveTo(x + side * 7, y - 17);
+  ctx.lineTo(x + side * 12, y - 15);
+  ctx.stroke();
 }

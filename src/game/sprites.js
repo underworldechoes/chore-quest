@@ -45,7 +45,7 @@ export const SPRITES = {
     '...mmmmmm...',
     '..cccccccc..',
     '.cccccccccc.',
-    '.ccdccccdcnnnn',
+    '.ccdccccdcc.',
     '.cccccccccc.',
     '..cdcccdcc..',
     '..d......d..',

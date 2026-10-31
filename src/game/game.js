@@ -42,7 +42,7 @@ const BOSS_SPRITES = { files: SPRITES.bossFiles, expenses: SPRITES.bossExpenses,
 
 const THEMES = {
   files: { skyTop: '#07091a', skyBottom: '#24204a', floor: '#120f26', grid: '#3b2f6b', pillar: '#1a1838', fog: '36, 32, 74' },
-  inbox: { skyTop: '#0a1626', skyBottom: '#3a5a7a', floor: '#0e1a2a', grid: '#4a7aa8', pillar: '#1e3048', fog: '120, 160, 200' },
+  inbox: { skyTop: '#0b0812', skyBottom: '#3a2f52', floor: '#120e1c', grid: '#4b3f6b', pillar: '#1a1626', fog: '90, 76, 120', storm: true },
   expenses: { skyTop: '#06140f', skyBottom: '#173a2c', floor: '#0b1a14', grid: '#1f5a40', pillar: '#12261d', fog: '23, 58, 44' },
 };
 
@@ -90,6 +90,7 @@ export class Game {
     this.enemies = [];
     this.bolts = [];
     this.particles = [];
+    this.slashes = [];
     this.results = [];
     this.pending = new Set();
     this.stats = {
@@ -335,6 +336,7 @@ export class Game {
         b.done = true;
         const p = this.screenPos(b.enemy);
         this.burst(p.x, p.y - 8 * p.scale, b.color, p.scale);
+        this.slashes.push({ x: p.x, y: p.y - 8 * p.scale, size: 6 + 6 * p.scale, color: b.color, life: 0.25, tilt: Math.random() - 0.5 });
         if (b.kill) b.enemy.state = 'dead';
       }
     }
@@ -345,6 +347,8 @@ export class Game {
       p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; p.life -= dt;
     }
     this.particles = this.particles.filter((p) => p.life > 0);
+    for (const sl of this.slashes) sl.life -= dt;
+    this.slashes = this.slashes.filter((sl) => sl.life > 0);
 
     this.railCooldown = Math.max(0, this.railCooldown - dt);
     this.castTimer -= dt;
@@ -470,19 +474,43 @@ export class Game {
     }
     if (!heroDrawn) this.drawHero(ctx, heroPos, heroPx);
 
-    const gun = { x: heroPos.x + 6 * heroPx, y: heroPos.y - 4 * heroPx - 8 };
+    // Sword waves: a crescent of light flies from the blade to the target.
+    const tip = { x: heroPos.x + 14 * heroPx, y: heroPos.y - 6 * heroPx };
     for (const b of this.bolts) {
       const p = this.screenPos(b.enemy);
       const tx = p.x, ty = p.y - 8 * p.scale;
-      const head = { x: gun.x + (tx - gun.x) * b.t, y: gun.y + (ty - gun.y) * b.t };
-      const tailT = b.beam ? 0 : Math.max(0, b.t - 0.3);
-      const tail = { x: gun.x + (tx - gun.x) * tailT, y: gun.y + (ty - gun.y) * tailT };
-      ctx.strokeStyle = b.beam ? '#ff6b9a' : b.color;
-      ctx.lineWidth = b.beam ? 4 : 3;
-      line(ctx, tail, head);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1;
-      line(ctx, tail, head);
+      const hx = tip.x + (tx - tip.x) * b.t;
+      const hy = tip.y + (ty - tip.y) * b.t;
+      const angle = Math.atan2(ty - tip.y, tx - tip.x);
+      const r = (b.beam ? 16 : 11) * (1 - b.t * 0.4);
+      ctx.save();
+      ctx.translate(hx, hy);
+      ctx.rotate(angle);
+      ctx.globalCompositeOperation = 'lighter';
+      for (const [color, width, rr] of [[b.beam ? '#ff6b9a' : b.color, b.beam ? 5 : 4, r], ['#ffffff', 1.5, r - 1]]) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.beginPath();
+        ctx.arc(-rr * 0.6, 0, rr, -1.1, 1.1);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // X-slash marks where a blade lands.
+    for (const sl of this.slashes) {
+      const a = sl.life / 0.25;
+      ctx.save();
+      ctx.translate(sl.x, sl.y);
+      ctx.rotate(sl.tilt);
+      ctx.globalAlpha = a;
+      for (const [color, width] of [[sl.color, 3], ['#ffffff', 1]]) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        const k = sl.size * (1.4 - a * 0.4);
+        line(ctx, { x: -k, y: -k }, { x: k, y: k });
+        line(ctx, { x: k, y: -k }, { x: -k, y: k });
+      }
+      ctx.restore();
     }
     for (const p of this.particles) {
       ctx.fillStyle = p.color;
@@ -532,8 +560,24 @@ export class Game {
     shadow(ctx, pos.x, pos.y, 6 * px);
     if (this.hero.hurt > 0 && Math.floor(this.time * 20) % 2) ctx.globalAlpha = 0.4;
     drawSprite(ctx, sprite, HERO_PALETTE, x, pos.y - sprite.length * px, px);
-    const lunge = this.castTimer > 0 ? 2 * px : 0;
-    drawSprite(ctx, this.blade.shape, this.blade.palette, x + 9 * px + lunge, pos.y - 7 * px, Math.max(1, px - 1));
+    // Blade swing: a fast upward arc while attacking, resting angle otherwise.
+    const swing = this.castTimer > 0 ? 1 - this.castTimer / 0.15 : null;
+    const angle = swing === null ? -0.35 : -1.6 + swing * 2.4;
+    const bladePx = Math.max(1, px - 1);
+    ctx.save();
+    ctx.translate(x + 10 * px, pos.y - 5 * px);
+    ctx.rotate(angle);
+    drawSprite(ctx, this.blade.shape, this.blade.palette, 0, -3 * bladePx, bladePx);
+    if (swing !== null) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = this.blade.palette.x;
+      ctx.globalAlpha = 1 - swing;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, 16 * bladePx, -0.9, 0.9);
+      ctx.stroke();
+    }
+    ctx.restore();
     ctx.globalAlpha = 1;
     drawSprite(ctx, SPRITES.byte, BYTE_PALETTE, x + 15 * px, pos.y - 25 * px + Math.sin(this.time * 3) * 3, 2);
   }
@@ -596,6 +640,16 @@ export class Game {
     fog.addColorStop(1, `rgba(${th.fog}, 0)`);
     ctx.fillStyle = fog;
     ctx.fillRect(-10, HORIZON - 20, W + 20, 70);
+
+    // The Peak is a storm: rain and the odd lightning flash.
+    if (th.storm) {
+      ctx.fillStyle = 'rgba(200, 190, 255, 0.25)';
+      for (let i = 0; i < 50; i++) ctx.fillRect((i * 89 + this.time * 60) % W, (i * 47 + this.time * 220) % BAR_Y, 1, 5);
+      if (this.time % 5 < 0.12) {
+        ctx.fillStyle = 'rgba(235, 225, 255, 0.35)';
+        ctx.fillRect(-10, 0, W + 20, BAR_Y);
+      }
+    }
   }
 
   drawHud(ctx) {
