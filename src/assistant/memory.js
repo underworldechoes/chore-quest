@@ -44,7 +44,8 @@ export class Memory {
 
   recordRun(choreId, { itemsDone, minutes, agreeRate = null, repeatRatio = null }) {
     const h = this.history(choreId);
-    const pace = minutes > 0 ? itemsDone / minutes : h.pace;
+    // A run abandoned before doing anything says nothing about the player's pace.
+    const pace = minutes > 0 && itemsDone > 0 ? itemsDone / minutes : h.pace;
     this.data.history[choreId] = {
       runs: h.runs + 1,
       itemsDone: h.itemsDone + itemsDone,

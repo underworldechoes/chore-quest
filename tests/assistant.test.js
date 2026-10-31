@@ -51,3 +51,10 @@ test('memory persists, needs a clear majority, and tracks pace', () => {
   m.recordRun('files', { itemsDone: 60, minutes: 2 });
   assert.equal(new Memory(storage).history('files').pace, 30);
 });
+
+test('an abandoned run does not drag the pace estimate to zero', () => {
+  const m = new Memory(null);
+  m.recordRun('files', { itemsDone: 40, minutes: 2 });
+  m.recordRun('files', { itemsDone: 0, minutes: 0.5 });
+  assert.equal(m.history('files').pace, 20);
+});

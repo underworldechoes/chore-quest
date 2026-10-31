@@ -1,8 +1,19 @@
 // "Folder Dungeon" chore: sorts a real folder (File System Access API) or a demo folder.
-import { FILE_CATEGORIES, suggestFileCategory, findDuplicates, extensionOf, baseNameOf } from './classifier.js';
+import { FILE_CATEGORIES, suggestFileCategory, findDuplicates, extensionOf, baseNameOf, fileBossHp } from './classifier.js';
 
 const MAX_FILES = 500;
 const HASH_LIMIT_BYTES = 25 * 1024 * 1024;
+
+// A few heavyweights so the demo has bosses to fight.
+const DEMO_BIG_FILES = {
+  'ubuntu-24.04.iso': 2.6 * 1024 ** 3,
+  'vacation.mp4': 1.3 * 1024 ** 3,
+  'project_backup.zip': 640 * 1024 ** 2,
+  'trailer.mkv': 380 * 1024 ** 2,
+  'setup_game.exe': 120 * 1024 ** 2,
+  'clip.mov': 75 * 1024 ** 2,
+  'node-v22-x64.msi': 31 * 1024 ** 2,
+};
 
 const DEMO_FILES = [
   'IMG_2041.jpg', 'IMG_2041 (1).jpg', 'Screenshot 2026-03-11.png', 'resume_final_v3.docx', 'invoice_march.pdf',
@@ -12,6 +23,7 @@ const DEMO_FILES = [
   'contract_signed.pdf', 'voice_memo.wav', 'wallpaper.webp', 'ubuntu-24.04.iso', 'todo.md', 'trailer.mkv',
   'config.backup', 'family_photo.heic', 'report_q3.docx', 'report_q3 (2).docx', 'song.flac', 'clip.mov',
 ].map((name, i) => {
+  if (DEMO_BIG_FILES[name]) return { id: `f${i}`, name, size: DEMO_BIG_FILES[name], lastModified: i };
   // Copies like "x (1).jpg" get the same size as "x.jpg", so duplicate detection has something to find.
   const canonical = `${baseNameOf(name)}.${extensionOf(name)}`;
   const size = [...canonical].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 9_000_000, 7) + 1000;
@@ -47,6 +59,7 @@ export const filesChore = {
       items,
       sourceName: backend.name,
       suggest: (item) => suggestFileCategory(item, memory),
+      bossHp: (item) => fileBossHp(item.size),
       learnKey: (item) => (item.isDuplicate ? null : `ext:${extensionOf(item.name)}`),
       async apply(item, categoryId) {
         const folder = FILE_CATEGORIES.find((c) => c.id === categoryId).label;

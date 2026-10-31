@@ -89,3 +89,14 @@ export function suggestFileCategory(item, memory) {
   }
   return { category: 'misc', confidence: 0.35, reason: ext ? `unknown .${ext} type` : 'no extension' };
 }
+
+const MB = 1024 * 1024;
+
+/** Bigger files are tougher bosses: 1 hit under 10 MB, up to 5 hits past 1 GB. */
+export function fileBossHp(size) {
+  if (size >= 1024 * MB) return 5;
+  if (size >= 200 * MB) return 4;
+  if (size >= 50 * MB) return 3;
+  if (size >= 10 * MB) return 2;
+  return 1;
+}

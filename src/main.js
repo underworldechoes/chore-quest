@@ -63,7 +63,7 @@ function openGate(choreId) {
   $('#gate-title').textContent = chore.title;
   $('#gate-blurb').textContent = chore.blurb;
   $('#gate-history').textContent = h.runs
-    ? `Cleared ${h.itemsDone} so far · your pace ${Math.round(h.pace)} items/min`
+    ? `Cleared ${h.itemsDone} so far${h.pace ? ` · your pace ${Math.round(h.pace)} items/min` : ''}`
     : 'Uncharted: never attempted';
   $('#byte-advice').textContent = rec.choreId === chore.id
     ? rec.message
@@ -171,7 +171,7 @@ async function launch(choreId, mode) {
     `[SYSTEM] Quest accepted: ${chore.title}`,
     ...chore.story,
     `BYTE: ${plan.message}`,
-    'BYTE: Keys 1-6 zap. SPACE trusts me. Q = auto-sweep. ESC = retreat.',
+    'BYTE: Keys 1-6 zap, SPACE trusts me. A/D or arrows to dodge. Big items are BOSSES. Q sweep, ESC retreat.',
   ]);
   show('voyage');
   await voyage.arrive();

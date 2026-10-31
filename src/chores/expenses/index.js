@@ -1,6 +1,6 @@
 // "Expense Swamp" chore: categorise a bank-statement CSV and produce a cleaned report.
 import { parseCsv, rowsToTransactions, toCsv } from './csv.js';
-import { EXPENSE_CATEGORIES, suggestExpenseCategory, analyzeExpenses, merchantKey } from './analyzer.js';
+import { EXPENSE_CATEGORIES, suggestExpenseCategory, analyzeExpenses, merchantKey, expenseBossHp } from './analyzer.js';
 
 const DEMO_CSV = `Date,Description,Amount
 2026-09-01,NETFLIX.COM SUBSCRIPTION,649
@@ -61,6 +61,7 @@ export const expensesChore = {
       items,
       sourceName: mode === 'real' ? 'your statement' : 'demo statement',
       suggest: (item) => suggestExpenseCategory(item, memory),
+      bossHp: (item) => expenseBossHp(item.amount),
       learnKey: (item) => `merchant:${merchantKey(item.description)}`,
       async apply(item, categoryId) { item.category = categoryId; },
       async finish(results) {

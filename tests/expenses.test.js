@@ -41,3 +41,9 @@ test('analysis finds recurring, double charges and outliers', () => {
   assert.equal(r.doubleCharges.length, 1);
   assert.deepEqual(r.outliers.map((t) => t.description), ['FANCY DINNER']);
 });
+
+test('keywords match whole words, not fragments inside other words', () => {
+  assert.equal(suggestExpenseCategory({ description: 'SPOTIFY PREMIUM' }).category, 'subs');
+  assert.equal(suggestExpenseCategory({ description: 'HDFC EMI 0042' }).category, 'bills');
+  assert.equal(suggestExpenseCategory({ description: 'ELECTRICITY BESCOM' }).category, 'bills');
+});

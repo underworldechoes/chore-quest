@@ -345,12 +345,12 @@ export class Town {
       ctx.font = '16px "Press Start 2P", monospace';
       const title = 'LANTERNFALL';
       const tw = ctx.measureText(title).width;
-      text(ctx, title, (W - tw) / 2, 92, '#e8e6f0');
+      text(ctx, title, (W - tw) / 2, 50, '#e8e6f0');
       ctx.fillStyle = '#e8e6f0';
-      ctx.fillRect(W / 2 - 90, 116, 180, 1);
+      ctx.fillRect(W / 2 - 90, 74, 180, 1);
       ctx.font = FONT;
       const sub = 'the town where chores come to die';
-      text(ctx, sub, (W - ctx.measureText(sub).width) / 2, 124, '#8fa3d9');
+      text(ctx, sub, (W - ctx.measureText(sub).width) / 2, 82, '#8fa3d9');
       ctx.globalAlpha = 1;
     }
   }

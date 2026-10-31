@@ -36,10 +36,20 @@ export function suggestExpenseCategory(tx, memory) {
 
   const desc = tx.description.toLowerCase();
   for (const [category, words] of Object.entries(KEYWORDS)) {
-    const hit = words.find((w) => desc.includes(w));
+    // Match at the start of a word, so "emi" (loan EMI) doesn't fire inside "premium".
+    const hit = words.find((w) => new RegExp(`\\b${w}`).test(desc));
     if (hit) return { category, confidence: 0.88, reason: `matches "${hit}"` };
   }
   return { category: 'other', confidence: 0.3, reason: 'unknown merchant' };
+}
+
+/** Bigger spends are tougher bosses: 1 hit under 2,000, up to 5 hits from 20,000. */
+export function expenseBossHp(amount) {
+  if (amount >= 20000) return 5;
+  if (amount >= 10000) return 4;
+  if (amount >= 5000) return 3;
+  if (amount >= 2000) return 2;
+  return 1;
 }
 
 const monthOf = (date) => (date || '').slice(0, 7);

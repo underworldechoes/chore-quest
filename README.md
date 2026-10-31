@@ -33,6 +33,14 @@ Byte gives gear advice from how you actually play. If your last backlog came in 
 
 Battles take place in a perspective corridor: 2D pixel sprites in a 3D-looking space (a vanishing point, a scrolling floor grid, pillars with torches, distance fog, and enemies that scale up with drop shadows as they approach). It's pure canvas, with no 3D library. The game logic still runs on a flat distance axis, and only the renderer projects it into depth.
 
+## Bosses, movement and dodging
+
+- **Move** with `A`/`D` or the arrow keys (strafe), and `W`/`S` (step forward/back).
+- Every enemy gets its own randomized movement (weave, zig-zag, drift, or stop-and-dash) and speed, so no two waves play the same.
+- **Big items are bosses.** Files over 10 MB / 50 MB / 200 MB / 1 GB, and spends over ₹2k / ₹5k / ₹10k / ₹20k, take 2 to 5 hits. Their colour shifts to crimson as they lose HP. The real action only happens on the killing blow, using the bin you chose with the first hit.
+- **The heaviest item in each wave comes last as the FINAL BOSS** (+1 HP, gold aura).
+- An enemy that reaches you is always left untouched. **Dodge** it and your combo survives; get hit and you lose the combo and 2 coins.
+
 ## Quests
 
 | Quest | Real input | What actually happens |
@@ -62,6 +70,8 @@ All of Byte's logic is in pure, unit-tested functions in [`src/assistant/`](src/
 | `W` / `E` | Enter the gate you're standing at |
 | `1`–`6` / click a bin | Zap the targeted enemy into that category |
 | `Space` / `Enter` / click the field | Accept Byte's suggestion |
+| `A`/`D`, arrows | Strafe across the corridor (dodge) |
+| `W` / `S` | Step forward / back |
 | `Z` / `X` / `C` | Switch gun (if owned) |
 | `Q` | Auto-Sweep (when the meter is full) |
 | `Esc` | End the run (anything you didn't zap stays untouched) |
@@ -80,7 +90,7 @@ Then open http://localhost:5173 in **Chrome or Edge**. Real folder sorting needs
 npm test
 ```
 
-This runs 26 unit tests (Node 18+ built-in test runner) covering the classifiers, the CSV parser, expense analysis, the assistant's planning and difficulty logic, progression, and memory.
+This runs 33 unit tests (Node 18+ built-in test runner) covering the classifiers, the CSV parser, expense analysis, the assistant's planning and difficulty logic, progression, and memory.
 
 ## Deploy to Google Cloud Run
 
@@ -110,6 +120,7 @@ src/
     progression.js        XP → level/title (pure)
     arsenal.js            guns, upgrades, coin bounty, which extra items a shot hits (pure)
     voyage.js             warp-jump cutscene between town and battle
+    encounters.js         random enemy motion, boss HP plan, final boss, boss colours (pure)
     draw.js               shared canvas UI helpers
     sprites.js            procedural pixel art (no asset files)
     audio.js              WebAudio blips
