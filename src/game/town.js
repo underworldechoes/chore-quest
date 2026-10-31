@@ -11,7 +11,7 @@ const NEAR = 28;
 const BOARD_X = 510;
 const LAMPS = [70, 215, 430, 610, 800, 930];
 const GATE_X = [330, 700];
-const GATE_STYLE = {
+export const GATE_STYLE = {
   files: { color: '#9b7bff', name: 'The Hoard Well' },
   expenses: { color: '#5fd38d', name: 'Mire Gate' },
 };

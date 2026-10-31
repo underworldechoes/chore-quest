@@ -1,9 +1,10 @@
-// Screen flow: title -> town (walk to a gate) -> quest window -> story -> battle -> results -> town.
+// Screen flow: title -> town -> quest window -> voyage (briefing at warp) -> battle -> results -> town.
 import { CHORES, getChore } from './chores/registry.js';
 import { Memory } from './assistant/memory.js';
 import { recommendChore, planSession } from './assistant/assistant.js';
 import { Game, W, H } from './game/game.js';
 import { Town } from './game/town.js';
+import { Voyage } from './game/voyage.js';
 import { levelFromXp, xpForRun } from './game/progression.js';
 
 const memory = new Memory();
@@ -16,7 +17,7 @@ const state = { minutes: 15, townX: 90, visitedTown: false };
 
 function show(id) {
   document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
-  canvas.classList.toggle('dim', !['play', 'town'].includes(id));
+  canvas.classList.toggle('dim', !['play', 'town', 'voyage', 'story'].includes(id));
 }
 
 function recommendation() {
@@ -108,12 +109,18 @@ async function launch(choreId, mode) {
   });
   const items = session.items.slice(0, plan.waveSize);
 
+  // The briefing plays while the ship cruises at warp; the last line triggers the landing.
+  const voyage = new Voyage(canvas, { chore });
+  show('voyage');
+  await voyage.depart();
   await playStory([
     `[SYSTEM] Quest accepted: ${chore.title}`,
     ...chore.story,
     `BYTE: ${plan.message}`,
     'BYTE: Keys 1-6 zap. SPACE trusts me. Q = auto-sweep. ESC = retreat.',
   ]);
+  show('voyage');
+  await voyage.arrive();
   startGame(chore, session, scoped, items);
 }
 

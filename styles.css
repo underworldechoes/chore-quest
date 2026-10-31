@@ -53,7 +53,7 @@ body {
   overflow-y: auto;
 }
 .screen.active { display: flex; }
-#play.active, #town.active { pointer-events: none; }
+#play.active, #town.active, #voyage.active { pointer-events: none; }
 #title, #results { background: #05060fe6; }
 
 h1 {

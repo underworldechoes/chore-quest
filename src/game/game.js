@@ -6,13 +6,13 @@ import { panel, text, fit, FONT } from './draw.js';
 
 export const W = 480;
 export const H = 270;
-const GROUND = 200;
-const HERO_X = 24;
+export const GROUND = 200;
+export const HERO_X = 24;
 const SCALE = 2;
 const MAX_ALIVE = 7;
 const SPACING = 34;
 const SWEEP_MAX = 8;
-const BAR_Y = 226;
+export const BAR_Y = 226;
 
 export class Game {
   /**
@@ -260,20 +260,7 @@ export class Game {
   }
 
   drawWorld(ctx) {
-    const sky = ctx.createLinearGradient(0, 0, 0, GROUND);
-    sky.addColorStop(0, this.chore.id === 'files' ? '#07091a' : '#06140f');
-    sky.addColorStop(1, this.chore.id === 'files' ? '#24204a' : '#173a2c');
-    ctx.fillStyle = sky;
-    ctx.fillRect(-10, 0, W + 20, GROUND);
-    for (let i = 0; i < 40; i++) {
-      const x = (i * 97 + this.time * (i % 3 + 1) * -4) % W;
-      ctx.fillStyle = i % 5 ? '#ffffff33' : '#ffffff88';
-      ctx.fillRect((x + W) % W, 70 + ((i * 53) % 110), 1, 1);
-    }
-    ctx.fillStyle = '#2b2b3d';
-    ctx.fillRect(-10, GROUND, W + 20, BAR_Y - GROUND);
-    ctx.fillStyle = '#3d3d55';
-    for (let x = -((this.time * 20) % 16); x < W; x += 16) ctx.fillRect(x, GROUND, 8, 3);
+    drawArena(ctx, this.chore.id, this.time);
 
     const heroSprite = this.castTimer > 0 ? SPRITES.heroCast : SPRITES.hero;
     drawSprite(ctx, heroSprite, HERO_PALETTE, HERO_X, GROUND - heroSprite.length * SCALE, SCALE);
@@ -357,4 +344,22 @@ export class Game {
       text(ctx, fit(c.label, 9), x + 6, BAR_Y + 26, suggested ? '#ffffff' : c.color);
     });
   }
+}
+
+/** The battle backdrop (sky, stars, ground). Shared with the landing cutscene. */
+export function drawArena(ctx, choreId, time, bottom = BAR_Y) {
+  const sky = ctx.createLinearGradient(0, 0, 0, GROUND);
+  sky.addColorStop(0, choreId === 'files' ? '#07091a' : '#06140f');
+  sky.addColorStop(1, choreId === 'files' ? '#24204a' : '#173a2c');
+  ctx.fillStyle = sky;
+  ctx.fillRect(-10, 0, W + 20, GROUND);
+  for (let i = 0; i < 40; i++) {
+    const x = (i * 97 + time * (i % 3 + 1) * -4) % W;
+    ctx.fillStyle = i % 5 ? '#ffffff33' : '#ffffff88';
+    ctx.fillRect((x + W) % W, 70 + ((i * 53) % 110), 1, 1);
+  }
+  ctx.fillStyle = '#2b2b3d';
+  ctx.fillRect(-10, GROUND, W + 20, bottom - GROUND);
+  ctx.fillStyle = '#3d3d55';
+  for (let x = -((time * 20) % 16); x < W; x += 16) ctx.fillRect(x, GROUND, 8, 3);
 }

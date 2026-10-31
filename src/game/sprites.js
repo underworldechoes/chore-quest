@@ -50,6 +50,20 @@ export const SPRITES = {
     '..cdcccdcc..',
     '..d......d..',
   ],
+  // Side view, nose pointing right.
+  ship: [
+    '.......ww...............',
+    '......wwwwhh............',
+    '..ttwwwwwwwwwwhh........',
+    '.ttggwwwwwwwwwwwwhh.....',
+    'tttggwwbbbbwwwwwwwwwhh..',
+    'tttggwwbccbwwwwwwwwwwwhh',
+    'tttggwwbbbbwwwwwwwwwhh..',
+    '.ttggwwwwwwwwwwwwhh.....',
+    '..ttwwwwwwwwwwhh........',
+    '......wwwwhh............',
+    '.......ww...............',
+  ],
   slime: [
     '...gggg...',
     '..gggggg..',
@@ -82,7 +96,8 @@ export const SPRITES = {
 };
 
 export const HERO_PALETTE = { l: '#ffd36b', n: '#c9d4ff', m: '#e8e6f0', e: '#0a0a14', c: '#2a3354', d: '#161b30' };
-export const BYTE_PALETTE = { c: '#26c6da', w: '#e0f7fa', k: '#006064' };
+export const SHIP_PALETTE = { w: '#c9d4ff', h: '#5b6aa8', b: '#2a3354', c: '#5ce1e6', g: '#ffd36b', t: '#3a4270' };
+export const BYTE_PALETTE ={ c: '#26c6da', w: '#e0f7fa', k: '#006064' };
 
 export function enemyPalette(body) {
   return { g: body, d: shade(body, -0.35), w: '#ffffff', k: '#1b1b1b', p: '#8d6e63', y: '#ffca28' };
