@@ -37,7 +37,7 @@ export const CHAPTERS = [
   {
     id: 'forge',
     title: 'Ch.5 Steel of the Forge',
-    goal: 'Own two guns from the Armory',
+    goal: 'Master two sword arts at the Armory',
     check: (p) => p.gunsOwned >= 2,
     reward: 60,
     epilogue: 'BYTE: Armed and organised. The King waits at the end of every wave.',

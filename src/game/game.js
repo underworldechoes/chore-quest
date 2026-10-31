@@ -391,7 +391,7 @@ export class Game {
     }
   }
 
-  /** Byte's heads-up when a new target arrives: bosses, low confidence, or a group the Rail Lance could clear. */
+  /** Byte's heads-up when a new target arrives: bosses, low confidence, or a group the Rending Lance could clear. */
   announce(t) {
     if (t.maxHp > 1) {
       const kind = t.final ? 'FINAL BOSS' : 'BOSS';

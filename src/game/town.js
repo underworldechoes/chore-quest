@@ -34,9 +34,9 @@ const HOUSES = [
 export class Town {
   /**
    * @param {HTMLCanvasElement} canvas
-   * @param {{chores, recommendedId, progress, startX?, showTitle?, onEnter:(choreId:string, x:number)=>void, onArmory:(x:number)=>void, onBoard:(x:number)=>void, blade?:string, quest?:string}} opts
+   * @param {{chores, recommendedId, progress, startX?, showTitle?, onEnter:(choreId:string, x:number)=>void, onArmory:(x:number)=>void, onBoard:(x:number)=>void, onProfile:(x:number)=>void, blade?:string, quest?:string}} opts
    */
-  constructor(canvas, { chores, recommendedId, progress, startX = 90, showTitle = true, onEnter, onArmory, onBoard, blade, quest }) {
+  constructor(canvas, { chores, recommendedId, progress, startX = 90, showTitle = true, onEnter, onArmory, onBoard, onProfile, blade, quest }) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.gates = chores.map((chore, i) => ({ chore, x: GATE_X[i] ?? 300 + i * 200, ...GATE_STYLE[chore.id] }));
@@ -45,6 +45,7 @@ export class Town {
     this.onEnter = onEnter;
     this.onArmory = onArmory;
     this.onBoard = onBoard;
+    this.onProfile = onProfile;
     this.blade = getBlade(blade);
     this.quest = quest;
 
@@ -101,6 +102,8 @@ export class Town {
     if (k === 'arrowleft' || k === 'a') { this.keys.left = true; this.targetX = null; }
     else if (k === 'arrowright' || k === 'd') { this.keys.right = true; this.targetX = null; }
     else if (!e.repeat && ['arrowup', 'w', 'e', 'enter', ' '].includes(k)) { e.preventDefault(); this.interact(); }
+    else if (!e.repeat && k === 'p') this.leaveTo(this.onProfile);
+    else if (!e.repeat && k === 'q') this.leaveTo(this.onBoard);
   }
 
   onKeyUp(e) {
@@ -109,9 +112,20 @@ export class Town {
     if (k === 'arrowright' || k === 'd') this.keys.right = false;
   }
 
+  /** Leave town for a menu screen (profile, quest log). */
+  leaveTo(open) {
+    this.stop();
+    open(this.x);
+  }
+
   onPointer(e) {
     const rect = this.canvas.getBoundingClientRect();
-    const worldX = ((e.clientX - rect.left) / rect.width) * W + this.camera;
+    const screenX = ((e.clientX - rect.left) / rect.width) * W;
+    const screenY = ((e.clientY - rect.top) / rect.height) * H;
+    // HUD shortcuts: the status window opens the profile, the quest line opens the quest log.
+    if (screenX < 182 && screenY < 34) return this.leaveTo(this.onProfile);
+    if (screenX < 240 && screenY >= 38 && screenY <= 52) return this.leaveTo(this.onBoard);
+    const worldX = screenX + this.camera;
     const gate = this.gates.find((g) => Math.abs(g.x - worldX) < 34);
     const armory = Math.abs(ARMORY_X - worldX) < 34 ? { armory: true, x: ARMORY_X } : null;
     const dest = gate ?? armory;
@@ -407,6 +421,7 @@ export class Town {
     // Status window (top-left).
     panel(ctx, 4, 4, 178, 30, '#06102acc');
     text(ctx, `Lv${p.level} ${p.title}`, 10, 8, '#e8e6f0');
+    text(ctx, '[P]', 154, 8, '#5ce1e6');
     ctx.fillStyle = '#0d1b3a';
     ctx.fillRect(10, 22, 164, 6);
     ctx.fillStyle = '#5ce1e6';
@@ -414,7 +429,7 @@ export class Town {
 
     if (this.quest) {
       panel(ctx, 4, 38, 236, 14, '#06102acc');
-      text(ctx, fit(`QUEST: ${this.quest}`, 28), 9, 41, '#ffd36b');
+      text(ctx, fit(`[Q] ${this.quest}`, 28), 9, 41, '#ffd36b');
     }
     text(ctx, 'LANTERNFALL', W - 98, 8, '#8fa3d9');
     text(ctx, 'SAFE ZONE', W - 82, 20, '#5fd38d');
@@ -429,11 +444,11 @@ export class Town {
     } else if (Math.abs(this.x - HERMIT_X) < NEAR) {
       systemWindow(ctx, 'THE HERMIT', fit(HERMIT_LINES[Math.floor(this.time / 4) % HERMIT_LINES.length], 54));
     } else if (this.nearArmory) {
-      systemWindow(ctx, '[W/E] ENTER ARMORY', 'Buy and upgrade guns with coins from real chores');
+      systemWindow(ctx, '[W/E] ENTER ARMORY', 'Learn and upgrade sword arts with coins from chores');
     } else if (Math.abs(this.x - BOARD_X) < NEAR) {
       systemWindow(ctx, '[W/E] READ THE QUEST LOG', `Total cleared: ${p.totalCleared}   XP to next: ${p.needed - p.into}`);
     } else if (this.time < 6) {
-      systemWindow(ctx, 'CONTROLS', 'A/D walk   W/E enter a gate   or click one');
+      systemWindow(ctx, 'CONTROLS', 'A/D walk  W/E enter  P profile  Q quest log');
     }
 
     // Area title card, fades in then out.

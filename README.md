@@ -16,18 +16,18 @@ Walk with `A`/`D`, or click a gate to walk to it. Each **quest gate** leads to a
 gate it recommends. The **Guild Board** shows your totals. Real work earns **XP and levels**
 (Wanderer, Tidy Squire, Clutter Hunter and up), shown in game-system windows: quest accepted, quest complete, level up.
 
-## Guns are batch tools (RPG upgrades)
+## Sword arts are batch tools (RPG upgrades)
 
-Real work earns **coins**. At the **Armory** (the forge at the east end of town) you buy and upgrade three guns,
-each up to Lv3. Each gun is a different way to batch real chores:
+Real work earns **coins**. At the **Armory** (the forge at the east end of town) you buy and upgrade three sword arts,
+each up to Lv3. Each sword art is a different way to batch real chores:
 
-| Gun | Key | What one shot really does | Upgrades |
+| Sword art | Key | What one strike really does | Upgrades |
 |---|---|---|---|
-| **Pulse Blaster** | `Z` | Handles exactly one item. | Bigger coin bounty (+50%, +100%) |
-| **Chain Scatter** | `X` | Also files other on-screen items that Byte is confident belong in the **same bin**. | Chains to 2 / 3 / 5 items; confidence bar 88% / 85% / 80% |
-| **Rail Lance** | `C` | Pierces every on-screen item of the **same kind** (same file type / same merchant) and files them all with *your* choice. | Pierces 3 / 5 / 8; cooldown 6s / 4s / 2.5s |
+| **Swift Strike** | `Z` | Handles exactly one item. | Bigger coin bounty (+50%, +100%) |
+| **Chain Cleave** | `X` | Also files other on-screen items that Byte is confident belong in the **same bin**. | Chains to 2 / 3 / 5 items; confidence bar 88% / 85% / 80% |
+| **Rending Lance** | `C` | Pierces every on-screen item of the **same kind** (same file type / same merchant) and files them all with *your* choice. | Pierces 3 / 5 / 8; cooldown 6s / 4s / 2.5s |
 
-Byte gives gear advice from how you actually play. If your last backlog came in same-kind groups, it suggests the Rail Lance. If you agreed with it 80%+ of the time, it suggests the Chain Scatter. Mid-battle it calls out when 3+ same-kind items are on screen.
+Byte gives gear advice from how you actually play. If your last backlog came in same-kind groups, it suggests the Rending Lance. If you agreed with it 80%+ of the time, it suggests the Chain Cleave. Mid-battle it calls out when 3+ same-kind items are on screen.
 
 ## 2.5D battles
 
@@ -49,7 +49,7 @@ Each quest has its own detailed boss sprite: the **Hoard Golem** (files), the **
 
 ## Story quest: The Clutter King
 
-Read the **Guild Board** in town (`W`/`E`) to open the quest log. Five chapters (The Hoard Stirs, Debts of the Mire, The Weight of Things, Steel of the Forge, The Clutter King) complete **only from real progress**: items cleared, bosses slain, guns owned, level reached. Each one pays coins and unlocks the next part of Byte's story. The current goal is always shown in the town HUD.
+Press **`Q`** anywhere in town (or click the quest line, or read the **Guild Board**) to open the quest log. Press **`P`** (or click your level panel) for your **profile**: level and XP, coins, chapters, bosses slain, totals per quest, your gear, and how many preferences Byte has learned. Five chapters (The Hoard Stirs, Debts of the Mire, The Weight of Things, Steel of the Forge, The Clutter King) complete **only from real progress**: items cleared, bosses slain, sword arts owned, level reached. Each one pays coins and unlocks the next part of Byte's story. The current goal is always shown in the town HUD.
 
 ## Blades
 
@@ -86,12 +86,13 @@ All of Byte's logic is in pure, unit-tested functions in [`src/assistant/`](src/
 | Key | Action |
 |---|---|
 | `A`/`D`, click | Walk around town (click a gate to walk in) |
+| `P` / `Q` | Profile / story quest log (in town) |
 | `W` / `E` | Enter the gate you're standing at |
 | `1`–`6` / click a bin | Zap the targeted enemy into that category |
 | `Space` / `Enter` / click the field | Accept Byte's suggestion |
 | `A`/`D`, arrows | Strafe across the corridor (dodge) |
 | `W` / `S` | Step forward / back |
-| `Z` / `X` / `C` | Switch gun (if owned) |
+| `Z` / `X` / `C` | Switch sword art (if owned) |
 | `Q` | Auto-Sweep (when the meter is full) |
 | `Esc` | End the run (anything you didn't zap stays untouched) |
 
@@ -138,7 +139,7 @@ src/
     town.js               Lanternfall hub: walkable side-scroller with quest gates
     game.js               the battle loop; talks only to a chore session
     progression.js        XP → level/title (pure)
-    arsenal.js            guns, upgrades, coin bounty, which extra items a shot hits (pure)
+    arsenal.js            sword arts, upgrades, coin bounty, which extra items a strike hits (pure)
     voyage.js             warp-jump cutscene between town and battle
     encounters.js         random enemy motion, boss HP plan, final boss, boss colours (pure)
     story.js              story quest chapters, checked against real progress (pure)

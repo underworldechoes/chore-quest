@@ -98,6 +98,11 @@ export class Memory {
     this.save();
   }
 
+  /** How many sorting preferences Byte has learned from your corrections. */
+  learnedCount() {
+    return Object.keys(this.data.prefs).length;
+  }
+
   /** The most recent run across all chores: what Byte bases its gear advice on. */
   lastRun() {
     return Object.values(this.data.history).sort((a, b) => (b.lastRun ?? 0) - (a.lastRun ?? 0))[0] ?? null;

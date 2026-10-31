@@ -54,7 +54,7 @@ body {
 }
 .screen.active { display: flex; }
 #play.active, #town.active, #voyage.active { pointer-events: none; }
-#title, #results, #questlog { background: #05060fe6; }
+#title, #results, #questlog, #profile { background: #05060fe6; }
 
 h1 {
   font-size: clamp(28px, 6vw, 56px);
@@ -151,6 +151,9 @@ h2 { color: var(--accent); margin: 0; font-size: 16px; }
 .chapter h3 { margin: 0; font-size: 10px; color: var(--ink); }
 .chapter p { margin: 4px 0 0; font-size: 9px; }
 .lines li.story-line { color: var(--accent); }
+.profile-xp { display: flex; flex-direction: column; gap: 6px; }
+.xp-bar { height: 10px; background: #0d1b3a; border: 1px solid #2b3460; }
+.xp-fill { height: 100%; width: var(--fill); background: var(--sys); box-shadow: 0 0 10px var(--sys); }
 
 .byte-line { display: flex; gap: 12px; align-items: center; color: var(--byte); }
 .byte-icon {

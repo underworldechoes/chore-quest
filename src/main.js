@@ -1,5 +1,5 @@
 // Screen flow: title -> town -> quest window -> voyage (briefing at warp) -> battle -> results -> town.
-// From town you can also visit the armory to buy and upgrade guns.
+// From town you can also visit the armory to learn and upgrade sword arts.
 import { CHORES, getChore } from './chores/registry.js';
 import { Memory } from './assistant/memory.js';
 import { recommendChore, planSession, recommendWeapon } from './assistant/assistant.js';
@@ -8,7 +8,7 @@ import { Town } from './game/town.js';
 import { Voyage } from './game/voyage.js';
 import { sfx } from './game/audio.js';
 import { el } from './ui/dom.js';
-import { storyLog, newlyCompleted, activeChapter } from './game/story.js';
+import { CHAPTERS, storyLog, newlyCompleted, activeChapter } from './game/story.js';
 import { BLADES, isUnlocked } from './game/blades.js';
 import { drawSprite } from './game/sprites.js';
 import { levelFromXp, xpForRun } from './game/progression.js';
@@ -68,6 +68,7 @@ function enterTown() {
     onEnter: (choreId, x) => { state.townX = x; openGate(choreId); },
     onArmory: (x) => { state.townX = x; openArmory(); },
     onBoard: (x) => { state.townX = x; openQuestLog(); },
+    onProfile: (x) => { state.townX = x; openProfile(); },
     blade: memory.blade,
     quest: activeChapter(storyProgress(), memory.story.claimed)?.goal,
   });
@@ -107,7 +108,7 @@ function openGate(choreId) {
 
 $('#gate-back').addEventListener('click', enterTown);
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && ['gate', 'armory', 'questlog'].some((id) => $(`#${id}`).classList.contains('active'))) enterTown();
+  if (e.key === 'Escape' && ['gate', 'armory', 'questlog', 'profile'].some((id) => $(`#${id}`).classList.contains('active'))) enterTown();
 });
 
 // ---------- armory ----------
@@ -206,6 +207,39 @@ function openQuestLog() {
 }
 
 $('#quest-back').addEventListener('click', enterTown);
+
+// ---------- profile ----------
+
+function openProfile() {
+  const lv = levelFromXp(memory.xp);
+  const { arsenal, story } = memory;
+  const art = WEAPONS.find((w) => w.id === arsenal.equipped);
+  const blade = BLADES.find((b) => b.id === memory.blade) ?? BLADES[0];
+  const stat = (value, label) => el('div', {}, el('b', {}, value), el('span', {}, label));
+
+  $('#profile-title').textContent = `Lv${lv.level} ${lv.title}`;
+  $('#profile-xp').replaceChildren(
+    el('div', { className: 'xp-bar' }, el('div', { className: 'xp-fill', style: { '--fill': `${Math.round((lv.into / lv.needed) * 100)}%` } })),
+    el('span', { className: 'muted' }, `${lv.into} / ${lv.needed} XP to Lv${lv.level + 1}`),
+  );
+  $('#profile-stats').replaceChildren(
+    stat(`${arsenal.coins} G`, 'coins'),
+    stat(`${story.claimed.length}/${CHAPTERS.length}`, 'story chapters'),
+    stat(story.bossesSlain, 'bosses slain'),
+    stat(memory.history('files').itemsDone, 'files sorted'),
+    stat(memory.history('expenses').itemsDone, 'transactions filed'),
+    stat(memory.history('inbox').itemsDone, 'senders tamed'),
+  );
+  $('#profile-gear').replaceChildren(
+    el('li', {}, `Sword art: ${art.name} Lv${arsenal.owned[art.id]}`),
+    el('li', {}, `Blade: ${blade.name}`),
+    el('li', {}, `Final bosses defeated: ${story.finalBossesSlain}`),
+    el('li', {}, `Byte has learned ${memory.learnedCount()} of your sorting preferences`),
+  );
+  show('profile');
+}
+
+$('#profile-back').addEventListener('click', enterTown);
 
 // ---------- launch ----------
 
