@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chore Quest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="stage">
+    <canvas id="game" aria-label="Chore Quest game"></canvas>
+
+    <section id="title" class="screen">
+      <p class="sys-tag">// FULL-DIVE CHORE RPG //</p>
+      <h1>CHORE<br />QUEST</h1>
+      <p class="tagline">Play the game. The chores do themselves.</p>
+      <p class="muted">Every enemy is a real file or a real transaction.<br />Every zap does the real work.</p>
+      <button id="start" class="btn big">[ DIVE IN ]</button>
+    </section>
+
+    <section id="town" class="screen"></section>
+
+    <section id="gate" class="screen">
+      <div class="sys-window">
+        <p class="sys-head">[ QUEST ] <span id="gate-title"></span></p>
+        <p id="gate-blurb"></p>
+        <p id="gate-history" class="muted"></p>
+        <div class="byte-line"><span class="byte-icon" aria-hidden="true"></span><p id="byte-advice"></p></div>
+        <div class="row center">
+          <span class="muted">Time you have:</span>
+          <button class="chip" data-minutes="5">5 min</button>
+          <button class="chip" data-minutes="15">15 min</button>
+          <button class="chip" data-minutes="30">30 min</button>
+        </div>
+        <div class="row center">
+          <button id="gate-real" class="btn"></button>
+          <button id="gate-demo" class="btn ghost">Demo run</button>
+          <button id="gate-back" class="btn ghost">Back (Esc)</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="story" class="screen">
+      <div class="dialog">
+        <span class="byte-icon" aria-hidden="true"></span>
+        <p id="story-text"></p>
+        <span class="hint">click / ENTER ▶</span>
+      </div>
+    </section>
+
+    <section id="play" class="screen"></section>
+
+    <section id="results" class="screen">
+      <p class="sys-tag">[SYSTEM] QUEST COMPLETE</p>
+      <h2 id="result-title"></h2>
+      <p id="result-xp" class="xp"></p>
+      <div id="result-stats" class="stats"></div>
+      <ul id="result-lines" class="lines"></ul>
+      <div id="result-actions" class="row center"></div>
+    </section>
+  </main>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
