@@ -1,11 +1,14 @@
 // Screen flow: title -> town -> quest window -> voyage (briefing at warp) -> battle -> results -> town.
+// From town you can also visit the armory to buy and upgrade guns.
 import { CHORES, getChore } from './chores/registry.js';
 import { Memory } from './assistant/memory.js';
-import { recommendChore, planSession } from './assistant/assistant.js';
+import { recommendChore, planSession, recommendWeapon } from './assistant/assistant.js';
 import { Game, W, H } from './game/game.js';
 import { Town } from './game/town.js';
 import { Voyage } from './game/voyage.js';
+import { sfx } from './game/audio.js';
 import { levelFromXp, xpForRun } from './game/progression.js';
+import { WEAPONS, MAX_LEVEL, nextCost, purchase, describeWeapon } from './game/arsenal.js';
 
 const memory = new Memory();
 const $ = (sel) => document.querySelector(sel);
@@ -30,7 +33,7 @@ function recommendation() {
 
 function progress() {
   const totalCleared = CHORES.reduce((sum, c) => sum + memory.history(c.id).itemsDone, 0);
-  return { ...levelFromXp(memory.xp), totalCleared };
+  return { ...levelFromXp(memory.xp), totalCleared, coins: memory.arsenal.coins };
 }
 
 // ---------- town ----------
@@ -44,6 +47,7 @@ function enterTown() {
     startX: state.townX,
     showTitle: !state.visitedTown,
     onEnter: (choreId, x) => { state.townX = x; openGate(choreId); },
+    onArmory: (x) => { state.townX = x; openArmory(); },
   });
   state.visitedTown = true;
   document.fonts.ready.then(() => town.start());
@@ -81,8 +85,58 @@ function openGate(choreId) {
 
 $('#gate-back').addEventListener('click', enterTown);
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && $('#gate').classList.contains('active')) enterTown();
+  if (e.key === 'Escape' && ['gate', 'armory'].some((id) => $(`#${id}`).classList.contains('active'))) enterTown();
 });
+
+// ---------- armory ----------
+
+function openArmory(notice = '') {
+  const arsenal = memory.arsenal;
+  const advice = recommendWeapon(memory.lastRun());
+  const advised = WEAPONS.find((w) => w.id === advice.weaponId);
+  $('#armory-coins').textContent = `${arsenal.coins} G`;
+  $('#armory-advice').textContent = notice || `${advised.name}: ${advice.reason}`;
+
+  $('#weapons').replaceChildren(...WEAPONS.map((w) => {
+    const level = arsenal.owned[w.id];
+    const cost = nextCost(arsenal, w.id);
+    const row = document.createElement('article');
+    row.className = `weapon${w.id === advice.weaponId ? ' recommended' : ''}`;
+    row.style.setProperty('--wpn', w.color);
+    row.innerHTML = `
+      <div class="weapon-head">
+        <h3>${w.name} <span class="muted">[${w.key.toUpperCase()}]</span></h3>
+        <span class="lv">${level ? `Lv${level}/${MAX_LEVEL}` : 'LOCKED'}</span>
+      </div>
+      <p>${w.blurb}</p>
+      <p class="muted">${describeWeapon(w.id, level || 1)}${level && level < MAX_LEVEL ? ` → next: ${describeWeapon(w.id, level + 1)}` : ''}</p>
+      <div class="row"></div>`;
+    const actions = row.querySelector('.row');
+    if (cost !== null) {
+      const buy = Object.assign(document.createElement('button'), {
+        className: 'btn', textContent: `${level ? 'Upgrade' : 'Buy'} · ${cost} G`, disabled: arsenal.coins < cost,
+      });
+      buy.addEventListener('click', () => {
+        memory.arsenal = purchase(memory.arsenal, w.id);
+        sfx.sweep();
+        openArmory(`[SYSTEM] ${w.name} is now Lv${memory.arsenal.owned[w.id]}!`);
+      });
+      actions.append(buy);
+    }
+    if (level) {
+      const equipped = arsenal.equipped === w.id;
+      const equip = Object.assign(document.createElement('button'), {
+        className: 'btn ghost', textContent: equipped ? 'Equipped' : 'Equip', disabled: equipped,
+      });
+      equip.addEventListener('click', () => { memory.arsenal = { ...memory.arsenal, equipped: w.id }; openArmory(); });
+      actions.append(equip);
+    }
+    return row;
+  }));
+  show('armory');
+}
+
+$('#armory-back').addEventListener('click', enterTown);
 
 // ---------- launch ----------
 
@@ -151,6 +205,8 @@ function startGame(chore, session, scoped, items) {
   show('play');
   const game = new Game(canvas, {
     session, chore, items, memory: scoped,
+    arsenal: memory.arsenal,
+    onEquip: (id) => { memory.arsenal = { ...memory.arsenal, equipped: id }; },
     onEnd: (results, stats) => showResults(chore, session, results, stats),
   });
   document.fonts.ready.then(() => game.start());
@@ -163,15 +219,18 @@ async function showResults(chore, session, results, stats) {
   const before = levelFromXp(memory.xp);
   const xp = xpForRun({ done, bestCombo: stats.bestCombo, override: stats.override });
   memory.addXp(xp);
-  memory.recordRun(chore.id, { itemsDone: done, minutes: stats.minutes });
+  memory.recordRun(chore.id, {
+    itemsDone: done, minutes: stats.minutes, agreeRate: stats.agreeRate, repeatRatio: stats.repeatRatio,
+  });
+  memory.arsenal = { ...memory.arsenal, coins: memory.arsenal.coins + stats.coins };
   const after = levelFromXp(memory.xp);
   const summary = await session.finish(results);
   const decided = stats.agree + stats.override;
 
   $('#result-title').textContent = `${chore.title} cleared!`;
   $('#result-xp').textContent = after.level > before.level
-    ? `+${xp} XP · LEVEL UP! Lv${after.level} ${after.title}`
-    : `+${xp} XP · Lv${after.level} ${after.title} (${after.needed - after.into} to next)`;
+    ? `+${xp} XP · +${stats.coins} G · LEVEL UP! Lv${after.level} ${after.title}`
+    : `+${xp} XP · +${stats.coins} G · Lv${after.level} ${after.title} (${after.needed - after.into} to next)`;
   $('#result-xp').classList.toggle('levelup', after.level > before.level);
   $('#result-stats').innerHTML = `
     <div><b>${done}</b><span>real ${chore.id === 'files' ? 'files sorted' : 'transactions filed'}</span></div>

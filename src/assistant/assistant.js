@@ -67,6 +67,35 @@ export function canAutoSweep(suggestion) {
   return suggestion.confidence >= AUTO_SWEEP_CONFIDENCE;
 }
 
+/**
+ * Gear advice based on how the player actually plays.
+ * Repetitive backlogs (many same-type files / same merchant) favour the Rail Lance;
+ * players who trust Byte get the most out of the Chain Scatter.
+ */
+export function recommendWeapon(lastRun) {
+  if (lastRun?.agreeRate == null) return { weaponId: 'blaster', reason: "Clear a quest first and I'll study your style." };
+  const pct = (n) => Math.round(n * 100);
+  if ((lastRun.repeatRatio ?? 0) >= 0.3) {
+    return { weaponId: 'rail', reason: `${pct(lastRun.repeatRatio)}% of your last backlog came in same-kind groups. A Rail Lance clears a group in one shot.` };
+  }
+  if ((lastRun.agreeRate ?? 0) >= 0.8) {
+    return { weaponId: 'scatter', reason: `You agreed with me ${pct(lastRun.agreeRate)}% of the time. A Chain Scatter turns that trust into multi-kills.` };
+  }
+  return { weaponId: 'blaster', reason: 'You correct me a lot, so precision matters. Upgrade the Pulse Blaster for bigger bounties.' };
+}
+
+/** Share of items that belong to a group of 3+ with the same learn key. */
+export function repeatRatio(items, keyOf) {
+  if (!items.length) return 0;
+  const counts = {};
+  for (const it of items) {
+    const k = keyOf(it);
+    if (k) counts[k] = (counts[k] ?? 0) + 1;
+  }
+  const grouped = items.filter((it) => (counts[keyOf(it)] ?? 0) >= 3).length;
+  return grouped / items.length;
+}
+
 /** Short reactive lines so Byte feels alive. */
 export function commentary(event, ctx = {}) {
   switch (event) {
@@ -76,6 +105,9 @@ export function commentary(event, ctx = {}) {
     case 'combo': return `${ctx.combo} combo! The clutter fears you.`;
     case 'sweep': return `AUTO-SWEEP! I handled ${ctx.count} easy ones.`;
     case 'skip': return 'Skipped. It stays where it was. No harm done.';
+    case 'rail': return `${ctx.count} of the same kind on screen! Rail Lance [C] gets them all.`;
+    case 'weapon': return `${ctx.name} equipped.`;
+    case 'cooldown': return 'Rail Lance recharging... firing a normal shot.';
     case 'error': return `Ouch, couldn't do that: ${ctx.message}`;
     default: return '';
   }

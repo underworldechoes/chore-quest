@@ -1,11 +1,12 @@
 // Persistent learned preferences + play history. Storage is injected so it's testable in Node.
+import { newArsenal } from '../game/arsenal.js';
 
 const KEY = 'chore-quest:v1';
 
 export class Memory {
   constructor(storage = globalThis.localStorage) {
     this.storage = storage;
-    this.data = { prefs: {}, history: {}, xp: 0 };
+    this.data = { prefs: {}, history: {}, xp: 0, arsenal: newArsenal() };
     try {
       const raw = storage?.getItem(KEY);
       if (raw) this.data = { ...this.data, ...JSON.parse(raw) };
@@ -41,7 +42,7 @@ export class Memory {
     return this.data.history[choreId] ?? { runs: 0, itemsDone: 0, pace: null, lastRun: null };
   }
 
-  recordRun(choreId, { itemsDone, minutes }) {
+  recordRun(choreId, { itemsDone, minutes, agreeRate = null, repeatRatio = null }) {
     const h = this.history(choreId);
     const pace = minutes > 0 ? itemsDone / minutes : h.pace;
     this.data.history[choreId] = {
@@ -50,6 +51,8 @@ export class Memory {
       // Exponential moving average keeps the pace estimate responsive but stable.
       pace: h.pace && pace ? h.pace * 0.6 + pace * 0.4 : pace,
       lastRun: Date.now(),
+      agreeRate,
+      repeatRatio,
     };
     this.save();
   }
@@ -61,6 +64,20 @@ export class Memory {
   addXp(amount) {
     this.data.xp += Math.max(0, Math.round(amount));
     this.save();
+  }
+
+  get arsenal() {
+    return this.data.arsenal;
+  }
+
+  set arsenal(value) {
+    this.data.arsenal = value;
+    this.save();
+  }
+
+  /** The most recent run across all chores: what Byte bases its gear advice on. */
+  lastRun() {
+    return Object.values(this.data.history).sort((a, b) => (b.lastRun ?? 0) - (a.lastRun ?? 0))[0] ?? null;
   }
 
   save() {

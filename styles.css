@@ -116,6 +116,17 @@ h2 { color: var(--accent); margin: 0; font-size: 16px; }
 .sys-head span { color: var(--accent); }
 @keyframes open { from { transform: scaleY(0.2); opacity: 0; } }
 
+.sys-window.wide { width: min(100%, 760px); }
+.coins { color: var(--accent); font-size: 12px; }
+.weapons { display: grid; gap: 8px; }
+.weapon { border: 1px solid #2b3460; border-left: 4px solid var(--wpn); padding: 10px 12px; background: #050b1fcc; }
+.weapon.recommended { box-shadow: 0 0 0 1px var(--byte); }
+.weapon h3 { margin: 0; font-size: 11px; color: var(--wpn); }
+.weapon p { margin: 6px 0; }
+.weapon .btn { font-size: 9px; padding: 7px 10px; }
+.weapon-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.lv { font-size: 9px; color: var(--accent); }
+
 .byte-line { display: flex; gap: 12px; align-items: center; color: var(--byte); }
 .byte-icon {
   flex: none;

@@ -9,7 +9,8 @@ const SCALE = 2;
 const WALK_SPEED = 95;
 const NEAR = 28;
 const BOARD_X = 510;
-const LAMPS = [70, 215, 430, 610, 800, 930];
+const ARMORY_X = 870;
+const LAMPS = [70, 215, 430, 610, 790, 940];
 const GATE_X = [330, 700];
 export const GATE_STYLE = {
   files: { color: '#9b7bff', name: 'The Hoard Well' },
@@ -24,15 +25,16 @@ const HOUSES = [
 export class Town {
   /**
    * @param {HTMLCanvasElement} canvas
-   * @param {{chores, recommendedId, progress, startX?, showTitle?, onEnter:(choreId:string, x:number)=>void}} opts
+   * @param {{chores, recommendedId, progress, startX?, showTitle?, onEnter:(choreId:string, x:number)=>void, onArmory:(x:number)=>void}} opts
    */
-  constructor(canvas, { chores, recommendedId, progress, startX = 90, showTitle = true, onEnter }) {
+  constructor(canvas, { chores, recommendedId, progress, startX = 90, showTitle = true, onEnter, onArmory }) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.gates = chores.map((chore, i) => ({ chore, x: GATE_X[i] ?? 300 + i * 200, ...GATE_STYLE[chore.id] }));
     this.recommendedId = recommendedId;
     this.progress = progress;
     this.onEnter = onEnter;
+    this.onArmory = onArmory;
 
     this.x = startX;
     this.facing = 1;
@@ -76,6 +78,10 @@ export class Town {
     return this.gates.find((g) => Math.abs(g.x - this.x) < NEAR);
   }
 
+  get nearArmory() {
+    return Math.abs(ARMORY_X - this.x) < NEAR;
+  }
+
   // ---------- input ----------
 
   onKeyDown(e) {
@@ -95,18 +101,22 @@ export class Town {
     const rect = this.canvas.getBoundingClientRect();
     const worldX = ((e.clientX - rect.left) / rect.width) * W + this.camera;
     const gate = this.gates.find((g) => Math.abs(g.x - worldX) < 34);
-    this.targetX = gate ? gate.x : worldX;
-    this.autoEnter = gate ?? null;
+    const armory = Math.abs(ARMORY_X - worldX) < 34 ? { armory: true, x: ARMORY_X } : null;
+    const dest = gate ?? armory;
+    this.targetX = dest ? dest.x : worldX;
+    this.autoEnter = dest;
   }
 
   interact() {
     const gate = this.nearGate;
     if (gate) this.enter(gate);
+    else if (this.nearArmory) this.enter({ armory: true });
   }
 
-  enter(gate) {
+  enter(dest) {
     this.stop();
-    this.onEnter(gate.chore.id, this.x);
+    if (dest.armory) this.onArmory(this.x);
+    else this.onEnter(dest.chore.id, this.x);
   }
 
   // ---------- simulation ----------
@@ -172,6 +182,7 @@ export class Town {
     this.drawGround(ctx);
     LAMPS.forEach((x) => lamp(ctx, x, this.time));
     this.drawBoard(ctx);
+    this.drawArmory(ctx);
     this.gates.forEach((g) => this.drawGate(ctx, g));
     this.drawMotes(ctx);
 
@@ -260,6 +271,32 @@ export class Town {
     [[-20, -46], [-6, -44], [8, -47], [-14, -33], [4, -32]].forEach(([dx, dy]) => ctx.fillRect(x + dx, GROUND + dy, 10, 9));
   }
 
+  drawArmory(ctx) {
+    const x = ARMORY_X;
+    const flicker = 0.35 + Math.sin(this.time * 11) * 0.08;
+    ctx.fillStyle = '#241c22';
+    ctx.fillRect(x - 34, GROUND - 52, 68, 52);
+    for (let i = 0; i < 6; i++) ctx.fillRect(x - 38 + i * 4, GROUND - 56 - i * 4, 76 - i * 8, 4);
+    ctx.fillRect(x + 16, GROUND - 84, 10, 30);
+    ctx.fillStyle = '#05060f';
+    ctx.fillRect(x - 14, GROUND - 34, 28, 34);
+    glow(ctx, x, GROUND - 16, 40, '#ff7a2f', flicker);
+    ctx.fillStyle = '#ff9f43';
+    ctx.fillRect(x - 8, GROUND - 10, 16, 6);
+    ctx.fillStyle = '#6b7395';
+    ctx.fillRect(x - 30, GROUND - 12, 12, 4);
+    ctx.fillRect(x - 27, GROUND - 8, 6, 8);
+    for (let i = 0; i < 3; i++) {
+      const sy = GROUND - 90 - ((this.time * 14 + i * 10) % 30);
+      ctx.fillStyle = `rgba(150, 150, 170, ${0.3 - i * 0.08})`;
+      ctx.fillRect(x + 18 + Math.sin(this.time + i) * 3, sy, 6, 4);
+    }
+    const label = 'Armory';
+    const lw = label.length * 8 + 10;
+    panel(ctx, x - lw / 2, GROUND - 106, lw, 14, '#0a1024dd');
+    text(ctx, label, x - lw / 2 + 5, GROUND - 103, '#ff9f43');
+  }
+
   drawMotes(ctx) {
     for (const m of this.motes) {
       ctx.fillStyle = `rgba(150, 230, 255, ${0.35 + Math.sin(m.p * 3) * 0.25})`;
@@ -285,12 +322,16 @@ export class Town {
 
     text(ctx, 'LANTERNFALL', W - 98, 8, '#8fa3d9');
     text(ctx, 'SAFE ZONE', W - 82, 20, '#5fd38d');
+    const coins = `${p.coins} G`;
+    text(ctx, coins, W - 10 - coins.length * 8, 32, '#ffd36b');
 
     // Context prompt (bottom).
     const gate = this.nearGate;
     if (gate) {
       const rec = gate.chore.id === this.recommendedId ? '  * BYTE PICKS' : '';
       systemWindow(ctx, `[W/E] ENTER ${gate.name.toUpperCase()}${rec}`, fit(gate.chore.blurb, 49));
+    } else if (this.nearArmory) {
+      systemWindow(ctx, '[W/E] ENTER ARMORY', 'Buy and upgrade guns with coins from real chores');
     } else if (Math.abs(this.x - BOARD_X) < NEAR) {
       systemWindow(ctx, 'GUILD BOARD', `Total cleared: ${p.totalCleared}   XP to next: ${p.needed - p.into}`);
     } else if (this.time < 6) {

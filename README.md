@@ -16,6 +16,23 @@ Walk with `A`/`D`, or click a gate to walk to it. Each **quest gate** leads to a
 gate it recommends. The **Guild Board** shows your totals. Real work earns **XP and levels**
 (Wanderer, Tidy Squire, Clutter Hunter and up), shown in game-system windows: quest accepted, quest complete, level up.
 
+## Guns are batch tools (RPG upgrades)
+
+Real work earns **coins**. At the **Armory** (the forge at the east end of town) you buy and upgrade three guns,
+each up to Lv3. Each gun is a different way to batch real chores:
+
+| Gun | Key | What one shot really does | Upgrades |
+|---|---|---|---|
+| **Pulse Blaster** | `Z` | Handles exactly one item. | Bigger coin bounty (+50%, +100%) |
+| **Chain Scatter** | `X` | Also files other on-screen items that Byte is confident belong in the **same bin**. | Chains to 2 / 3 / 5 items; confidence bar 88% / 85% / 80% |
+| **Rail Lance** | `C` | Pierces every on-screen item of the **same kind** (same file type / same merchant) and files them all with *your* choice. | Pierces 3 / 5 / 8; cooldown 6s / 4s / 2.5s |
+
+Byte gives gear advice from how you actually play. If your last backlog came in same-kind groups, it suggests the Rail Lance. If you agreed with it 80%+ of the time, it suggests the Chain Scatter. Mid-battle it calls out when 3+ same-kind items are on screen.
+
+## 2.5D battles
+
+Battles take place in a perspective corridor: 2D pixel sprites in a 3D-looking space (a vanishing point, a scrolling floor grid, pillars with torches, distance fog, and enemies that scale up with drop shadows as they approach). It's pure canvas, with no 3D library. The game logic still runs on a flat distance axis, and only the renderer projects it into depth.
+
 ## Quests
 
 | Quest | Real input | What actually happens |
@@ -45,6 +62,7 @@ All of Byte's logic is in pure, unit-tested functions in [`src/assistant/`](src/
 | `W` / `E` | Enter the gate you're standing at |
 | `1`–`6` / click a bin | Zap the targeted enemy into that category |
 | `Space` / `Enter` / click the field | Accept Byte's suggestion |
+| `Z` / `X` / `C` | Switch gun (if owned) |
 | `Q` | Auto-Sweep (when the meter is full) |
 | `Esc` | End the run (anything you didn't zap stays untouched) |
 
@@ -62,7 +80,7 @@ Then open http://localhost:5173 in **Chrome or Edge**. Real folder sorting needs
 npm test
 ```
 
-This runs 21 unit tests (Node 18+ built-in test runner) covering the classifiers, the CSV parser, expense analysis, the assistant's planning and difficulty logic, progression, and memory.
+This runs 26 unit tests (Node 18+ built-in test runner) covering the classifiers, the CSV parser, expense analysis, the assistant's planning and difficulty logic, progression, and memory.
 
 ## Architecture
 
@@ -80,6 +98,8 @@ src/
     town.js               Lanternfall hub: walkable side-scroller with quest gates
     game.js               the battle loop; talks only to a chore session
     progression.js        XP → level/title (pure)
+    arsenal.js            guns, upgrades, coin bounty, which extra items a shot hits (pure)
+    voyage.js             warp-jump cutscene between town and battle
     draw.js               shared canvas UI helpers
     sprites.js            procedural pixel art (no asset files)
     audio.js              WebAudio blips
