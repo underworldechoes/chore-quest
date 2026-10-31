@@ -64,6 +64,85 @@ export const SPRITES = {
     '......wwwwhh............',
     '.......ww...............',
   ],
+  // Bosses: bigger, more detailed originals. g/d take the boss colour so it can shift as HP drops.
+  bossFiles: [ // Hoard Golem
+    '.....dddddddd.....',
+    '...ddggggggggdd...',
+    '..dggggggggggggd..',
+    '..dggkkggggkkggd..',
+    '..dggkaggggkaggd..',
+    '..dggggggggggggd..',
+    '...dggwwwwwwggd...',
+    'dd..dggggggggd..dd',
+    'dgdddggggggggdddgd',
+    'dggggggggggggggggd',
+    'dgg.dggggggggd.ggd',
+    'dgg.dggddddggd.ggd',
+    'ddd.dggd..dggd.ddd',
+    '....dggd..dggd....',
+    '...ddggd..dggdd...',
+    '...dddd....dddd...',
+  ],
+  bossExpenses: [ // Ledger Wraith
+    '.......dddd.......',
+    '.....ddggggdd.....',
+    '....dggggggggd....',
+    '...dggkkkkkkggd...',
+    '...dgkkrkkrkkgd...',
+    '...dgkkkkkkkkgd...',
+    '....dgkkkkkkgd....',
+    '..ddggggggggggdd..',
+    '.dgggggaaagggggd..',
+    'dggg.ggaaagg.gggd.',
+    'dgg..ggggggg..ggd.',
+    '.dd..dggggggd..dd.',
+    '.....dggggggd.....',
+    '....dgggggggd.....',
+    '...dggg.dggggd....',
+    '..dgg...dd.dggd...',
+  ],
+  bossInbox: [ // Frost Wraith of the Summit
+    '..a.....a....a....',
+    '..aa...aaa..aa....',
+    '..dggggggggggggd..',
+    '..dwwwwwwwwwwwwd..',
+    '..dgwwwwwwwwwwgd..',
+    '..dggwwwwwwwwggd..',
+    '..dgkkgwwwwgkkgd..',
+    '..dgkrggwwggkrgd..',
+    '..dggggggggggggd..',
+    '...dggggggggggd...',
+    '..dggdggggggdggd..',
+    '.dgd.dggggggd.dgd.',
+    '.dd..dgg..ggd..dd.',
+    '.....dg....gd.....',
+    '......d....d......',
+  ],
+  envelope: [ // Mail Wraith
+    '.gggggggg.',
+    'gdggggggdg',
+    'ggdggggdgg',
+    'gggdggdggg',
+    'ggkggggkgg',
+    'gggggggggg',
+    'gggggggggg',
+    '.d.d..d.d.',
+  ],
+  hermit: [
+    '....hhh....',
+    '...hhhhh..a',
+    '..hhsssh..l',
+    '..hsksksh.l',
+    '..hswwwsh.l',
+    '...wwwww..l',
+    '..rrwwwrr.l',
+    '.rrrrwrrrrl',
+    '.rrrrrrrrrl',
+    '.rrrrrrrr.l',
+    '..rrrrrrr.l',
+    '..rr...rr.l',
+    '..bb...bb.l',
+  ],
   slime: [
     '...gggg...',
     '..gggggg..',
@@ -96,11 +175,12 @@ export const SPRITES = {
 };
 
 export const HERO_PALETTE = { l: '#ffd36b', n: '#c9d4ff', m: '#e8e6f0', e: '#0a0a14', c: '#2a3354', d: '#161b30' };
+export const HERMIT_PALETTE = { h: '#4a4a5e', s: '#e0b896', k: '#1b1b1b', w: '#f0f0f0', r: '#5a4632', b: '#2a1f18', l: '#8b6b3e', a: '#ffd36b' };
 export const SHIP_PALETTE = { w: '#c9d4ff', h: '#5b6aa8', b: '#2a3354', c: '#5ce1e6', g: '#ffd36b', t: '#3a4270' };
 export const BYTE_PALETTE ={ c: '#26c6da', w: '#e0f7fa', k: '#006064' };
 
 export function enemyPalette(body) {
-  return { g: body, d: shade(body, -0.35), w: '#ffffff', k: '#1b1b1b', p: '#8d6e63', y: '#ffca28' };
+  return { g: body, d: shade(body, -0.35), w: '#ffffff', k: '#1b1b1b', p: '#8d6e63', y: '#ffca28', a: '#ffd36b', r: '#ff2a4d' };
 }
 
 export function drawSprite(ctx, rows, palette, x, y, scale = 1, flip = false) {

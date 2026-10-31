@@ -3,7 +3,8 @@
 //   session: { items, sourceName, suggest(item), learnKey(item), bossHp(item), apply(item, cat), finish(results), undoAll?() }
 import { filesChore } from './files/index.js';
 import { expensesChore } from './expenses/index.js';
+import { inboxChore } from './inbox/index.js';
 
-export const CHORES = [filesChore, expensesChore];
+export const CHORES = [filesChore, expensesChore, inboxChore];
 
 export const getChore = (id) => CHORES.find((c) => c.id === id);

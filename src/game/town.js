@@ -1,21 +1,29 @@
 // Lanternfall: the walkable hub town. Each quest gate leads to a chore.
-import { SPRITES, HERO_PALETTE, BYTE_PALETTE, drawSprite } from './sprites.js';
+import { SPRITES, HERO_PALETTE, BYTE_PALETTE, HERMIT_PALETTE, drawSprite } from './sprites.js';
 import { panel, text, fit, FONT } from './draw.js';
 import { W, H } from './game.js';
 import { getBlade } from './blades.js';
 
-const WORLD_W = 960;
+const WORLD_W = 1260;
 const GROUND = 214;
 const SCALE = 2;
 const WALK_SPEED = 95;
 const NEAR = 28;
 const BOARD_X = 510;
 const ARMORY_X = 870;
-const LAMPS = [70, 215, 430, 610, 790, 940];
-const GATE_X = [330, 700];
+const LAMPS = [70, 215, 430, 610, 790, 960, 1210];
+const HERMIT_X = 1030;
+const HERMIT_LINES = [
+  'HERMIT: Ten thousand unread letters sleep on that mountain, child.',
+  'HERMIT: Sort the senders, not the letters. One rule tames a thousand.',
+  'HERMIT: The Frost Wraith at the summit is whoever emails you the most.',
+  'HERMIT: I never delete. I only file. Byte will write the rules for you.',
+];
+const GATE_X = [330, 700, 1120];
 export const GATE_STYLE = {
   files: { color: '#9b7bff', name: 'The Hoard Well' },
   expenses: { color: '#5fd38d', name: 'Mire Gate' },
+  inbox: { color: '#9fd8ff', name: 'Summit Trail' },
 };
 // Mid-layer houses: [x, width, height, colour].
 const HOUSES = [
@@ -186,10 +194,13 @@ export class Town {
     ctx.translate(-Math.round(cam), 0);
     this.drawGround(ctx);
     LAMPS.forEach((x) => lamp(ctx, x, this.time));
+    this.drawMountain(ctx);
     this.drawBoard(ctx);
     this.drawArmory(ctx);
     this.gates.forEach((g) => this.drawGate(ctx, g));
     this.drawMotes(ctx);
+    drawSprite(ctx, SPRITES.hermit, HERMIT_PALETTE, HERMIT_X - 11, GROUND - SPRITES.hermit.length * SCALE + Math.round(Math.sin(this.time * 1.5)), SCALE, this.x > HERMIT_X);
+    glow(ctx, HERMIT_X + 9, GROUND - 22, 18, '#ffd36b', 0.18);
 
     const sprite = this.moving && Math.floor(this.time * 8) % 2 ? SPRITES.heroWalk : SPRITES.hero;
     const bob = this.moving ? 0 : Math.round(Math.sin(this.time * 2));
@@ -278,6 +289,26 @@ export class Town {
     [[-20, -46], [-6, -44], [8, -47], [-14, -33], [4, -32]].forEach(([dx, dy]) => ctx.fillRect(x + dx, GROUND + dy, 10, 9));
   }
 
+  /** A snowy peak rising behind the Summit Trail gate. */
+  drawMountain(ctx) {
+    const base = GROUND;
+    const peakX = 1150;
+    for (let i = 0; i < 70; i++) {
+      const y = base - 160 + i * 2.3;
+      const half = i * 3.2;
+      ctx.fillStyle = i < 14 ? '#e8f1ff' : i < 18 ? '#b8cbe6' : '#1b2644';
+      ctx.fillRect(peakX - half, y, half * 2, 3);
+    }
+    ctx.fillStyle = '#25325a';
+    for (let i = 0; i < 40; i++) ctx.fillRect(peakX + 40 + i * 2, base - 100 + i * 2.5, 2, 100 - i * 2.5);
+    for (let i = 0; i < 12; i++) {
+      const fx = 990 + ((i * 37) % 260);
+      const fy = GROUND - 150 + ((this.time * 20 + i * 23) % 150);
+      ctx.fillStyle = 'rgba(232, 241, 255, 0.7)';
+      ctx.fillRect(fx + Math.sin(this.time + i) * 4, fy, 2, 2);
+    }
+  }
+
   drawArmory(ctx) {
     const x = ARMORY_X;
     const flicker = 0.35 + Math.sin(this.time * 11) * 0.08;
@@ -341,6 +372,8 @@ export class Town {
     if (gate) {
       const rec = gate.chore.id === this.recommendedId ? '  * BYTE PICKS' : '';
       systemWindow(ctx, `[W/E] ENTER ${gate.name.toUpperCase()}${rec}`, fit(gate.chore.blurb, 49));
+    } else if (Math.abs(this.x - HERMIT_X) < NEAR) {
+      systemWindow(ctx, 'THE HERMIT', fit(HERMIT_LINES[Math.floor(this.time / 4) % HERMIT_LINES.length], 54));
     } else if (this.nearArmory) {
       systemWindow(ctx, '[W/E] ENTER ARMORY', 'Buy and upgrade guns with coins from real chores');
     } else if (Math.abs(this.x - BOARD_X) < NEAR) {

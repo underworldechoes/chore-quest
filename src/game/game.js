@@ -37,8 +37,12 @@ const HERO_STEP = 0.6;
 const HIT_WIDTH = 0.32;
 const HIT_COIN_PENALTY = 2;
 
+const ENEMY_SPRITES = { files: SPRITES.slime, expenses: SPRITES.goblin, inbox: SPRITES.envelope };
+const BOSS_SPRITES = { files: SPRITES.bossFiles, expenses: SPRITES.bossExpenses, inbox: SPRITES.bossInbox };
+
 const THEMES = {
   files: { skyTop: '#07091a', skyBottom: '#24204a', floor: '#120f26', grid: '#3b2f6b', pillar: '#1a1838', fog: '36, 32, 74' },
+  inbox: { skyTop: '#0a1626', skyBottom: '#3a5a7a', floor: '#0e1a2a', grid: '#4a7aa8', pillar: '#1e3048', fog: '120, 160, 200' },
   expenses: { skyTop: '#06140f', skyBottom: '#173a2c', floor: '#0b1a14', grid: '#1f5a40', pillar: '#12261d', fog: '23, 58, 44' },
 };
 
@@ -451,8 +455,7 @@ export class Game {
   drawWorld(ctx) {
     this.drawCorridor(ctx);
 
-    const enemySprite = this.chore.id === 'files' ? SPRITES.slime : SPRITES.goblin;
-    const spriteW = enemySprite[0].length;
+    const enemySprite = ENEMY_SPRITES[this.chore.id] ?? SPRITES.slime;
     const target = this.target;
     const heroPos = project(this.hero.z, this.hero.lane);
     const heroPx = Math.max(2, Math.round(heroPos.scale));
@@ -463,7 +466,7 @@ export class Game {
     let heroDrawn = false;
     for (const e of enemies) {
       if (!heroDrawn && e.x < heroX) { this.drawHero(ctx, heroPos, heroPx); heroDrawn = true; }
-      this.drawEnemy(ctx, e, enemySprite, spriteW, e === target);
+      this.drawEnemy(ctx, e, enemySprite, e === target);
     }
     if (!heroDrawn) this.drawHero(ctx, heroPos, heroPx);
 
@@ -487,9 +490,13 @@ export class Game {
     }
   }
 
-  drawEnemy(ctx, e, sprite, spriteW, isTarget) {
+  drawEnemy(ctx, e, baseSprite, isTarget) {
     const p = this.screenPos(e);
-    const bossScale = e.maxHp > 1 ? 1 + (e.maxHp - 1) * 0.22 : 1;
+    const isBoss = e.maxHp > 1;
+    const sprite = isBoss ? BOSS_SPRITES[this.chore.id] ?? baseSprite : baseSprite;
+    const spriteW = sprite[0].length;
+    // Boss sprites are already ~2x the size of regular enemies; heavier bosses grow a little more.
+    const bossScale = isBoss ? 0.8 + (e.maxHp - 1) * 0.12 : 1;
     const px = Math.max(1, Math.round(p.scale * bossScale));
     const hop = Math.abs(Math.sin(e.bob)) * (e.motion.kind === 'dash' ? 4 : 2) * p.scale;
     const w = spriteW * px;

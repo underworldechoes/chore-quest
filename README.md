@@ -41,6 +41,12 @@ Battles take place in a perspective corridor: 2D pixel sprites in a 3D-looking s
 - **The heaviest item in each wave comes last as the FINAL BOSS** (+1 HP, gold aura).
 - An enemy that reaches you is always left untouched. **Dodge** it and your combo survives; get hit and you lose the combo and 2 coins.
 
+## The Summit and the Hermit
+
+East of the Armory, past the lamps, the road climbs a snowy mountain to the **Summit Trail** gate. **The Hermit**, an old archivist with a lantern staff, waits at its foot with advice. The heaviest sender in your inbox waits at the top as the **Frost Wraith**.
+
+Each quest has its own detailed boss sprite: the **Hoard Golem** (files), the **Ledger Wraith** (expenses) and the **Frost Wraith** (email).
+
 ## Story quest: The Clutter King
 
 Read the **Guild Board** in town (`W`/`E`) to open the quest log. Five chapters (The Hoard Stirs, Debts of the Mire, The Weight of Things, Steel of the Forge, The Clutter King) complete **only from real progress**: items cleared, bosses slain, guns owned, level reached. Each one pays coins and unlocks the next part of Byte's story. The current goal is always shown in the town HUD.
@@ -59,6 +65,7 @@ See [SECURITY.md](SECURITY.md). In short: everything stays on the device; files 
 |---|---|---|
 | **Folder Dungeon** | Any folder (e.g. Downloads) via the File System Access API | Files get moved into `Images/ Docs/ Media/ Archives/ Dupes/ Misc/`. Byte detects duplicates by SHA-256 and sends them to `Dupes/` (it never deletes anything). You can **undo all** moves at the end. |
 | **Expense Swamp** | A bank-statement CSV (common header names are recognised) | Each transaction gets a category. You download `expenses_categorised.csv` and a report that flags **recurring subscriptions** (with yearly cost), **possible double charges** and **unusually large** spends. |
+| **Inbox Peak** (Summit Trail) | A Google Takeout email export (`.mbox`), parsed headers-only in the browser | Every Mail Wraith is a **sender**. Zap it into Keep / Receipts / Social / News / Promo / Mute and you download **`gmail-filters.xml`** (import it in Gmail > Settings > Filters) that labels and archives everything from that sender, plus an unsubscribe list. Mail is never deleted and nothing is uploaded. |
 
 Both quests also have a **Demo** mode with sample data, so you can try them without touching your files.
 
@@ -102,7 +109,7 @@ Then open http://localhost:5173 in **Chrome or Edge**. Real folder sorting needs
 npm test
 ```
 
-This runs 38 unit tests (Node 18+ built-in test runner) covering the classifiers, the CSV parser, expense analysis, the assistant's planning and difficulty logic, progression, and memory.
+This runs 42 unit tests (Node 18+ built-in test runner) covering the classifiers, the CSV parser, expense analysis, the assistant's planning and difficulty logic, progression, and memory.
 
 ## Deploy to Google Cloud Run
 
@@ -126,6 +133,7 @@ src/
     registry.js           the chore plugin contract
     files/                classifier.js (pure) + index.js (File System Access / demo backend)
     expenses/             csv.js + analyzer.js (pure) + index.js (CSV input, report output)
+    inbox/                mbox.js + classifier.js (pure, Gmail filter export) + index.js
   game/
     town.js               Lanternfall hub: walkable side-scroller with quest gates
     game.js               the battle loop; talks only to a chore session

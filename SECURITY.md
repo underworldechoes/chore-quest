@@ -18,6 +18,7 @@ Chore Quest touches real user data (your files and your bank statement), so it i
 | Risk | Mitigation |
 |---|---|
 | XSS from file names / CSV text | No `innerHTML` anywhere; UI is built with `src/ui/dom.js` (`textContent` only). Game text is drawn on canvas. |
+| Hostile sender names in the Gmail filter export | All XML attribute values are escaped (`xmlEscape`, tested). Filters only label, archive or mark as read, and never delete. Only email headers are read; bodies are ignored. |
 | CSV formula injection in the exported report | `safeCell()` prefixes cells starting with `= + - @` (tests in `tests/expenses.test.js`). |
 | Script injection / clickjacking | Strict Content-Security-Policy (`script-src 'self'`, `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`), `X-Frame-Options: DENY`, `nosniff`, `no-referrer`, locked-down `Permissions-Policy` (see `index.html`, `nginx.conf.template`, `vercel.json`). |
 | Corrupt or tampered local storage | `Memory` falls back to safe defaults on parse errors; unknown blade ids fall back to the default blade. |

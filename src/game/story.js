@@ -19,8 +19,16 @@ export const CHAPTERS = [
     epilogue: 'BYTE: Every coin accounted for. The goblins whisper one name: the Clutter King.',
   },
   {
+    id: 'summit',
+    title: 'Ch.3 The Hermit of the Summit',
+    goal: 'Clear 10 senders on Inbox Peak',
+    check: (p) => (p.inboxDone ?? 0) >= 10,
+    reward: 50,
+    epilogue: 'HERMIT: Rules, not deletions. You learn fast. Now find what weighs on this land.',
+  },
+  {
     id: 'weight',
-    title: 'Ch.3 The Weight of Things',
+    title: 'Ch.4 The Weight of Things',
     goal: 'Slay a boss (a big file or a big spend)',
     check: (p) => p.bossesSlain >= 1,
     reward: 60,
@@ -28,7 +36,7 @@ export const CHAPTERS = [
   },
   {
     id: 'forge',
-    title: 'Ch.4 Steel of the Forge',
+    title: 'Ch.5 Steel of the Forge',
     goal: 'Own two guns from the Armory',
     check: (p) => p.gunsOwned >= 2,
     reward: 60,
@@ -36,7 +44,7 @@ export const CHAPTERS = [
   },
   {
     id: 'king',
-    title: 'Ch.5 The Clutter King',
+    title: 'Ch.6 The Clutter King',
     goal: 'Defeat a FINAL BOSS and reach Lv3',
     check: (p) => p.finalBossesSlain >= 1 && p.level >= 3,
     reward: 150,

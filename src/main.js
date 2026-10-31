@@ -41,6 +41,7 @@ function storyProgress() {
   return {
     filesDone: memory.history('files').itemsDone,
     expensesDone: memory.history('expenses').itemsDone,
+    inboxDone: memory.history('inbox').itemsDone,
     bossesSlain: story.bossesSlain,
     finalBossesSlain: story.finalBossesSlain,
     gunsOwned: Object.keys(arsenal.owned).length,

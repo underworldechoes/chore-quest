@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { CHAPTERS, storyLog, newlyCompleted, activeChapter } from '../src/game/story.js';
 import { BLADES, getBlade, isUnlocked, DEFAULT_BLADE } from '../src/game/blades.js';
 
-const progress = (over = {}) => ({ filesDone: 0, expensesDone: 0, bossesSlain: 0, gunsOwned: 1, finalBossesSlain: 0, level: 1, ...over });
+const progress = (over = {}) => ({ filesDone: 0, expensesDone: 0, inboxDone: 0, bossesSlain: 0, gunsOwned: 1, finalBossesSlain: 0, level: 1, ...over });
 
 test('chapters complete in order from real progress', () => {
   const p = progress({ filesDone: 12, expensesDone: 15 });
@@ -18,7 +18,7 @@ test('a later chapter cannot be completed before an earlier one', () => {
 
 test('story log marks done / active / locked', () => {
   const log = storyLog(progress(), ['stirring']);
-  assert.deepEqual(log.map((c) => c.status), ['done', 'active', 'locked', 'locked', 'locked']);
+  assert.deepEqual(log.map((c) => c.status), ['done', 'active', 'locked', 'locked', 'locked', 'locked']);
   assert.equal(activeChapter(progress(), CHAPTERS.map((c) => c.id)), null);
 });
 
